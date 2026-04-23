@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useSyncExternalStore } from 'react'
 import { supabase } from '@/lib/supabase'
 import { useRouter } from 'next/navigation'
 import { use } from 'react'
@@ -8,9 +8,10 @@ import {
   LiveKitRoom,
   useRoomContext,
   useLocalParticipant,
+  useParticipants,
 } from '@livekit/components-react'
 import '@livekit/components-styles'
-import { RoomEvent } from 'livekit-client'
+import { RoomEvent, Track } from 'livekit-client'
 
 declare global {
   interface Window {
@@ -140,6 +141,32 @@ const IconYouTube = () => (
   </svg>
 )
 
+const IconFullscreen = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <path d="M8 3H5a2 2 0 0 0-2 2v3"/>
+    <path d="M21 8V5a2 2 0 0 0-2-2h-3"/>
+    <path d="M3 16v3a2 2 0 0 0 2 2h3"/>
+    <path d="M16 21h3a2 2 0 0 0 2-2v-3"/>
+  </svg>
+)
+
+const IconExitFullscreen = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <path d="M8 3v3a2 2 0 0 1-2 2H3"/>
+    <path d="M21 8h-3a2 2 0 0 1-2-2V3"/>
+    <path d="M3 16h3a2 2 0 0 1 2 2v3"/>
+    <path d="M16 21v-3a2 2 0 0 1 2-2h3"/>
+  </svg>
+)
+
+const IconHamburger = () => (
+  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+    <line x1="3" y1="6" x2="21" y2="6"/>
+    <line x1="3" y1="12" x2="21" y2="12"/>
+    <line x1="3" y1="18" x2="21" y2="18"/>
+  </svg>
+)
+
 // ─── Sabitler ────────────────────────────────────────────────────────────────
 
 const ROOMS = [
@@ -173,6 +200,14 @@ interface QueueItem {
   thumbnail: string
   added_by: string
   added_at: string
+  started_at: string | null
+}
+
+interface MusicStateRow {
+  room_id: string
+  host_username: string | null
+  is_playing: boolean
+  current_video_id: string | null
   started_at: string | null
 }
 
@@ -233,31 +268,52 @@ function SpeakerListener({ onSpeakersChange }: { onSpeakersChange: (s: Set<strin
 
 function VoiceParticipantListener({ onParticipantsChange }: { onParticipantsChange: (p: string[]) => void }) {
   const room = useRoomContext()
-  const cb = useCallback(() => {
-    if (!room) return
-    const all = [...room.remoteParticipants.values()].map(p => p.identity)
-    if (room.localParticipant?.identity) all.push(room.localParticipant.identity)
-    onParticipantsChange(all)
-  }, [room, onParticipantsChange])
   useEffect(() => {
     if (!room) return
-    cb()
-    room.on(RoomEvent.ParticipantConnected, cb)
-    room.on(RoomEvent.ParticipantDisconnected, cb)
-    return () => {
-      room.off(RoomEvent.ParticipantConnected, cb)
-      room.off(RoomEvent.ParticipantDisconnected, cb)
+    const update = () => {
+      const all = [...room.remoteParticipants.values()].map(p => p.identity)
+      if (room.localParticipant?.identity) all.push(room.localParticipant.identity)
+      onParticipantsChange(all)
     }
-  }, [room, cb])
+    update()
+    room.on(RoomEvent.Connected, update)
+    room.on(RoomEvent.ParticipantConnected, update)
+    room.on(RoomEvent.ParticipantDisconnected, update)
+    return () => {
+      room.off(RoomEvent.Connected, update)
+      room.off(RoomEvent.ParticipantConnected, update)
+      room.off(RoomEvent.ParticipantDisconnected, update)
+    }
+  }, [room, onParticipantsChange])
+  return null
+}
+
+// ─── Ekran Paylaşımı Dinleyici (LiveKitRoom içinde) ──────────────────────────
+
+function ScreenShareViewer({ onScreenShare }: { onScreenShare: (track: MediaStreamTrack | null) => void }) {
+  const participants = useParticipants()
+
+  useEffect(() => {
+    for (const participant of participants) {
+      const pub = participant.getTrackPublication(Track.Source.ScreenShare)
+      if (pub?.track?.mediaStreamTrack) {
+        onScreenShare(pub.track.mediaStreamTrack)
+        return
+      }
+    }
+    onScreenShare(null)
+  }, [participants, onScreenShare])
+
   return null
 }
 
 // ─── Sağ Sidebar — Online Kullanıcılar ───────────────────────────────────────
 
-function UsersPanel({ users, speaking, currentUser }: {
+function UsersPanel({ users, speaking, currentUser, hostUsername }: {
   users: string[]
   speaking: Set<string>
   currentUser: string
+  hostUsername: string
 }) {
   return (
     <div className="flex-1 flex flex-col min-h-0">
@@ -273,6 +329,7 @@ function UsersPanel({ users, speaking, currentUser }: {
           users.map((user) => {
             const isSpeaking = speaking.has(user)
             const isMe = user === currentUser
+            const isHost = user === hostUsername
             return (
               <div key={user}
                 className="flex items-center gap-2.5 px-2 py-2 rounded-lg mb-0.5 transition-all duration-200"
@@ -296,6 +353,9 @@ function UsersPanel({ users, speaking, currentUser }: {
                         sen
                       </span>
                     )}
+                    {isHost && (
+                      <span title="Müzik Hostu" className="flex-shrink-0" style={{ fontSize: '11px' }}>👑</span>
+                    )}
                   </div>
                   {isSpeaking && (
                     <div className="flex items-end gap-0.5 mt-0.5 h-2.5">
@@ -318,42 +378,59 @@ function UsersPanel({ users, speaking, currentUser }: {
 
 // ─── Müzik Çalar Barı ────────────────────────────────────────────────────────
 
-function MusicPlayerBar({ song, isPlaying, volume, onTogglePlay, onNext, onPrev, onVolumeChange }: {
+function MusicPlayerBar({ song, isPlaying, volume, isHost, onTogglePlay, onNext, onPrev, onVolumeChange }: {
   song: QueueItem
   isPlaying: boolean
   volume: number
+  isHost: boolean
   onTogglePlay: () => void
   onNext: () => void
   onPrev: () => void
   onVolumeChange: (v: number) => void
 }) {
   return (
-    <div className="px-4 py-2 flex items-center gap-3 flex-shrink-0"
+    <div className="px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3 flex-shrink-0"
       style={{ backgroundColor: '#161616', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
       <img src={song.thumbnail} alt={song.title}
-        style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
+        className="rounded flex-shrink-0"
+        style={{ width: 32, height: 32, objectFit: 'cover' }} />
       <div className="flex-1 min-w-0">
         <div className="text-xs font-medium text-white truncate">{song.title}</div>
-        <div className="text-xs truncate" style={{ color: '#555' }}>Ekleyen: {song.added_by}</div>
+        <div className="hidden sm:block text-xs truncate" style={{ color: '#555' }}>
+          {isHost ? `Ekleyen: ${song.added_by}` : `Ekleyen: ${song.added_by} · sadece host kontrolü`}
+        </div>
       </div>
       <div className="flex items-center gap-0.5 flex-shrink-0">
-        <button onClick={onPrev} title="Önceki"
-          className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/10 transition-colors"
-          style={{ color: '#a1a1a1' }}>
+        <button
+          onClick={isHost ? onPrev : undefined}
+          title="Önceki"
+          className="w-7 h-7 rounded flex items-center justify-center transition-colors"
+          style={{ color: isHost ? '#a1a1a1' : '#333', cursor: isHost ? 'pointer' : 'default' }}
+          onMouseEnter={e => { if (isHost) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}>
           <IconSkipBack />
         </button>
-        <button onClick={onTogglePlay} title={isPlaying ? 'Duraklat' : 'Oynat'}
-          className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10 transition-colors"
-          style={{ color: '#ededed' }}>
+        <button
+          onClick={isHost ? onTogglePlay : undefined}
+          title={isPlaying ? 'Duraklat' : 'Oynat'}
+          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+          style={{ color: isHost ? '#ededed' : '#444', cursor: isHost ? 'pointer' : 'default' }}
+          onMouseEnter={e => { if (isHost) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}>
           {isPlaying ? <IconPause /> : <IconPlay />}
         </button>
-        <button onClick={onNext} title="Sonraki"
-          className="w-7 h-7 rounded flex items-center justify-center hover:bg-white/10 transition-colors"
-          style={{ color: '#a1a1a1' }}>
+        <button
+          onClick={isHost ? onNext : undefined}
+          title="Sonraki"
+          className="w-7 h-7 rounded flex items-center justify-center transition-colors"
+          style={{ color: isHost ? '#a1a1a1' : '#333', cursor: isHost ? 'pointer' : 'default' }}
+          onMouseEnter={e => { if (isHost) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
+          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}>
           <IconSkipForward />
         </button>
       </div>
-      <div className="flex items-center gap-1.5 flex-shrink-0" style={{ width: 90 }}>
+      {/* Ses kontrolü — küçük ekranlarda gizle */}
+      <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0" style={{ width: 90 }}>
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#555', flexShrink: 0 }}>
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
         </svg>
@@ -362,7 +439,7 @@ function MusicPlayerBar({ song, isPlaying, volume, onTogglePlay, onNext, onPrev,
           className="yt-volume-slider flex-1" style={{ cursor: 'pointer' }} />
       </div>
       <a href={`https://www.youtube.com/watch?v=${song.video_id}`} target="_blank" rel="noopener noreferrer"
-        title="YouTube'da aç" className="flex-shrink-0 opacity-50 hover:opacity-100 transition-opacity"
+        title="YouTube'da aç" className="hidden sm:flex flex-shrink-0 opacity-50 hover:opacity-100 transition-opacity"
         style={{ color: '#ff0000' }}>
         <IconYouTube />
       </a>
@@ -451,7 +528,6 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
   const { room } = use(params)
   const router = useRouter()
 
-  // textRoom: hangi metin kanalını görüntülediğimiz (navigasyon yok, state)
   const [textRoom, setTextRoom] = useState(room)
   const textRoomData = ROOMS.find(r => r.id === textRoom)
   const textRoomName = textRoomData?.name || textRoom
@@ -459,17 +535,22 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
   // Chat state
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
-  const [username] = useState(() => typeof window !== 'undefined' ? localStorage.getItem('username') || '' : '')
+  // SSR: '' (server snapshot) → hydration uyumu; client: gerçek localStorage değeri
+  const username = useSyncExternalStore(
+    () => () => {},
+    () => localStorage.getItem('username') || '',
+    () => ''
+  )
   const [onlineUsers, setOnlineUsers] = useState<string[]>([])
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // Voice state — voiceRoom, textRoom'dan bağımsız
+  // Voice state
   const [voiceRoom, setVoiceRoom] = useState('')
   const [liveKitToken, setLiveKitToken] = useState('')
   const [isInVoice, setIsInVoice] = useState(false)
   const [speaking, setSpeaking] = useState<Set<string>>(new Set())
   const [voiceParticipants, setVoiceParticipants] = useState<string[]>([])
-  
+  const voiceParticipantsRef = useRef<string[]>([])
 
   // Music state
   const [queue, setQueue] = useState<QueueItem[]>([])
@@ -481,22 +562,75 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
   const [volume, setVolume] = useState(80)
   const playerRef = useRef<YTPlayerInstance | null>(null)
   const queueRef = useRef<QueueItem[]>([])
+  const startedAtRef = useRef<string | null>(null)
+
+  // Host state
+  const [isHost, setIsHost] = useState(false)
+  const [hostUsername, setHostUsername] = useState('')
+  const isHostRef = useRef(false)
+  const initialIsPlayingRef = useRef(true)
+
+  // Screen share state
+  const [screenTrack, setScreenTrack] = useState<MediaStreamTrack | null>(null)
+  const screenVideoRef = useRef<HTMLVideoElement>(null)
+  const screenContainerRef = useRef<HTMLDivElement>(null)
+
+  // UI state
+  const [isFullscreen, setIsFullscreen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const currentSong = queue[0] ?? null
   const currentVideoId = currentSong?.video_id ?? null
-  const startedAtRef = useRef<string | null>(null)
 
-  // ── Metin kanalı değişince mesajları sıfırla ───────────────────────────────
+  // ── Katılımcı ref sync ────────────────────────────────────────────────────
+
+  useEffect(() => { voiceParticipantsRef.current = voiceParticipants }, [voiceParticipants])
+
+  // ── Fullscreen API ────────────────────────────────────────────────────────
+
+  const toggleFullscreen = async () => {
+    if (!screenContainerRef.current) return
+    const el = screenContainerRef.current as HTMLDivElement & {
+      webkitRequestFullscreen?: () => Promise<void>
+    }
+    if (!document.fullscreenElement) {
+      if (el.requestFullscreen) await el.requestFullscreen()
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen()
+      setIsFullscreen(true)
+    } else {
+      await document.exitFullscreen()
+      setIsFullscreen(false)
+    }
+  }
+
+  useEffect(() => {
+    const handler = () => setIsFullscreen(!!document.fullscreenElement)
+    document.addEventListener('fullscreenchange', handler)
+    document.addEventListener('webkitfullscreenchange', handler)
+    return () => {
+      document.removeEventListener('fullscreenchange', handler)
+      document.removeEventListener('webkitfullscreenchange', handler)
+    }
+  }, [])
+
+  // ── Metin kanalı değişince mesajları sıfırla ──────────────────────────────
 
   const switchTextRoom = (id: string) => {
     setTextRoom(id)
     setMessages([])
+    setSidebarOpen(false)
   }
+
+  // ── Auth — giriş yapılmamışsa ana sayfaya yönlendir ─────────────────────
+
+  useEffect(() => {
+    if (!localStorage.getItem('username')) router.push('/')
+  }, [router])
 
   // ── Mesajlar + Presence ──────────────────────────────────────────────────
 
   useEffect(() => {
-    if (!username) { router.push('/'); return }
+    if (!username) return
 
     supabase.from('messages').select('*').eq('room_id', textRoom)
       .order('created_at', { ascending: true })
@@ -530,38 +664,100 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
 
   // ── Müzik Kuyruğu ───────────────────────────────────────────────────────
 
-useEffect(() => { 
-  queueRef.current = queue
-  if (queue[0]?.started_at) startedAtRef.current = queue[0].started_at
-}, [queue])
+  useEffect(() => {
+    queueRef.current = queue
+    if (queue[0]?.started_at) startedAtRef.current = queue[0].started_at
+  }, [queue])
 
   const refetchQueue = useCallback(() => {
-  if (!voiceRoom) return
-  supabase.from('queue').select('*')
-    .eq('room_id', voiceRoom)
-    .order('added_at', { ascending: true })
-    .then(({ data, error }) => {
-      if (error) { console.error(error.message); return }
-      if (data) setQueue(data as QueueItem[])
-    })
-}, [voiceRoom])
+    if (!voiceRoom) return
+    supabase.from('queue').select('*')
+      .eq('room_id', voiceRoom)
+      .order('added_at', { ascending: true })
+      .then(({ data, error }) => {
+        if (error) { console.error(error.message); return }
+        if (data) setQueue(data as QueueItem[])
+      })
+  }, [voiceRoom])
 
   useEffect(() => {
     if (!username || !voiceRoom) return
     refetchQueue()
 
     const queueChannel = supabase.channel(`queue-${voiceRoom}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, refetchQueue)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, (payload) => {
+        refetchQueue()
+        type Row = { started_at?: string | null; video_id?: string }
+        const newRow = payload.new as Row
+        const oldRow = payload.old as Row
+        if (
+          payload.eventType === 'UPDATE' &&
+          newRow.started_at && !oldRow.started_at &&
+          playerRef.current && newRow.video_id === queueRef.current[0]?.video_id
+        ) {
+          const elapsed = Math.max(0, Math.floor(
+            (Date.now() - new Date(newRow.started_at).getTime()) / 1000
+          ))
+          playerRef.current.seekTo(elapsed, true)
+          startedAtRef.current = newRow.started_at
+        }
+      })
       .subscribe()
 
     return () => { supabase.removeChannel(queueChannel) }
-}, [voiceRoom, username, refetchQueue])
+  }, [voiceRoom, username, refetchQueue])
+
+  // ── music_state Subscription ─────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!voiceRoom || !username) return
+
+    const stateChannel = supabase.channel(`music-state-${voiceRoom}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'music_state',
+        filter: `room_id=eq.${voiceRoom}`,
+      }, (payload) => {
+        const newState = payload.new as Partial<MusicStateRow>
+
+        const amHost = newState.host_username === username
+        if (amHost !== isHostRef.current) {
+          setIsHost(amHost)
+          isHostRef.current = amHost
+        }
+        if (newState.host_username !== undefined) {
+          setHostUsername(newState.host_username || '')
+        }
+
+        if (!isHostRef.current && playerRef.current) {
+          if (newState.is_playing === true) {
+            playerRef.current.playVideo()
+            setIsPlaying(true)
+          } else if (newState.is_playing === false) {
+            playerRef.current.pauseVideo()
+            setIsPlaying(false)
+          }
+        }
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(stateChannel) }
+  }, [voiceRoom, username])
+
+  // ── Ekran Paylaşımı Video Bağlantısı ────────────────────────────────────
+
+  useEffect(() => {
+    if (!screenTrack || !screenVideoRef.current) return
+    const stream = new MediaStream([screenTrack])
+    screenVideoRef.current.srcObject = stream
+  }, [screenTrack])
 
   // ── YouTube IFrame API ──────────────────────────────────────────────────
 
   useEffect(() => {
     if (typeof window === 'undefined') return
-    if (window.YT && window.YT.Player) return  // lazy initializer already set ytReady=true
+    if (window.YT && window.YT.Player) return
     window.onYouTubeIframeAPIReady = () => setYtReady(true)
     if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
       const tag = document.createElement('script')
@@ -572,109 +768,181 @@ useEffect(() => {
 
   // ── Player başlat / değiştir ─────────────────────────────────────────────
 
-useEffect(() => {
-  if (!ytReady || !isInVoice) return
+  useEffect(() => {
+    if (!ytReady || !isInVoice) return
 
-  if (playerRef.current) {
-    try { playerRef.current.destroy() } catch {}
-    playerRef.current = null
-    setIsPlaying(false)
-  }
-  const container = document.getElementById('yt-player-container')
-  if (container) container.innerHTML = '<div id="yt-player"></div>'
+    if (playerRef.current) {
+      try { playerRef.current.destroy() } catch {}
+      playerRef.current = null
+      setIsPlaying(false)
+    }
+    const container = document.getElementById('yt-player-container')
+    if (container) container.innerHTML = '<div id="yt-player"></div>'
 
-  if (!currentVideoId) return
+    if (!currentVideoId) return
 
-  const capturedId = queueRef.current[0]?.id
-  const capturedStartedAt = startedAtRef.current   // ← ref'ten oku
+    const capturedId = queueRef.current[0]?.id
+    const capturedStartedAt = startedAtRef.current
+    const capturedIsHost = isHostRef.current
+    const capturedInitialIsPlaying = initialIsPlayingRef.current
 
-  const p = new window.YT.Player('yt-player', {
-    height: '1',
-    width: '1',
-    videoId: currentVideoId,
-    playerVars: { autoplay: 1, controls: 0 },
-    events: {
-      onReady: (e: { target: YTPlayerInstance }) => {
-        e.target.setVolume(volume)
-        if (capturedStartedAt) {
-          const elapsed = Math.floor(
-            (Date.now() - new Date(capturedStartedAt).getTime()) / 1000
-          )
-          if (elapsed > 0 && elapsed < 3600) e.target.seekTo(elapsed, true)
-        } else if (capturedId) {
-          supabase.from('queue')
-            .update({ started_at: new Date().toISOString() })
-            .eq('id', capturedId)
-            .is('started_at', null)
-            .then()
-        }
-        e.target.playVideo()
-        setIsPlaying(true)
-      },
-      onStateChange: (e: { target: YTPlayerInstance; data: number }) => {
-        if (e.data === window.YT.PlayerState.PLAYING) setIsPlaying(true)
-        if (e.data === window.YT.PlayerState.PAUSED) setIsPlaying(false)
-        if (e.data === window.YT.PlayerState.ENDED) {
-          const [first, ...rest] = queueRef.current
-          if (first) {
-            supabase.from('queue').delete().eq('id', first.id).then(() => {
-              if (rest[0]) {
-                supabase.from('queue')
-                  .update({ started_at: new Date().toISOString() })
-                  .eq('id', rest[0].id)
-                  .is('started_at', null)
-                  .then()
-              }
-            })
+    const elapsed = capturedStartedAt
+      ? Math.max(0, Math.floor((Date.now() - new Date(capturedStartedAt).getTime()) / 1000))
+      : 0
+
+    const p = new window.YT.Player('yt-player', {
+      height: '1',
+      width: '1',
+      videoId: currentVideoId,
+      playerVars: { autoplay: 1, controls: 0, start: elapsed },
+      events: {
+        onReady: (e: { target: YTPlayerInstance }) => {
+          e.target.setVolume(volume)
+          if (!capturedStartedAt && capturedId && capturedIsHost) {
+            supabase.from('queue')
+              .update({ started_at: new Date().toISOString() })
+              .eq('id', capturedId)
+              .is('started_at', null)
+              .then()
           }
-        }
+          e.target.playVideo()
+          if (!capturedIsHost && !capturedInitialIsPlaying) {
+            setTimeout(() => { try { e.target.pauseVideo() } catch {} }, 300)
+            setIsPlaying(false)
+          } else {
+            setIsPlaying(true)
+          }
+        },
+        onStateChange: (e: { target: YTPlayerInstance; data: number }) => {
+          if (e.data === window.YT.PlayerState.PLAYING) setIsPlaying(true)
+          if (e.data === window.YT.PlayerState.PAUSED) setIsPlaying(false)
+          if (e.data === window.YT.PlayerState.ENDED) {
+            const [first, ...rest] = queueRef.current
+            if (first) {
+              supabase.from('queue').delete().eq('id', first.id).then(() => {
+                const nextStartedAt = new Date().toISOString()
+                if (rest[0]) {
+                  supabase.from('queue')
+                    .update({ started_at: nextStartedAt })
+                    .eq('id', rest[0].id)
+                    .is('started_at', null)
+                    .then()
+                }
+                // music_state'i bir sonraki şarkı bilgisiyle güncelle
+                supabase.from('music_state').upsert({
+                  room_id: voiceRoom,
+                  current_video_id: rest[0]?.video_id ?? null,
+                  started_at: rest[0] ? nextStartedAt : null,
+                  is_playing: !!rest[0],
+                  updated_at: new Date().toISOString(),
+                }, { onConflict: 'room_id' }).then()
+              })
+            }
+          }
+        },
       },
-    },
-  })
-  playerRef.current = p
+    })
+    playerRef.current = p
 
-  return () => {
-    try { p.destroy() } catch {}
-    const c = document.getElementById('yt-player-container')
-    if (c) c.innerHTML = '<div id="yt-player"></div>'
-    if (playerRef.current === p) playerRef.current = null
-  }
-}, [ytReady, currentVideoId, isInVoice]) // eslint-disable-line
+    return () => {
+      try { p.destroy() } catch {}
+      const c = document.getElementById('yt-player-container')
+      if (c) c.innerHTML = '<div id="yt-player"></div>'
+      if (playerRef.current === p) playerRef.current = null
+    }
+  }, [ytReady, currentVideoId, isInVoice]) // eslint-disable-line
 
   // ── Sesli Sohbet ─────────────────────────────────────────────────────────
 
-const joinVoice = async (targetRoom: string) => {
-  if (isInVoice && voiceRoom === targetRoom) { leaveVoice(); return }
-  try {
-    const res = await fetch(`/api/livekit-token?room=${targetRoom}&username=${username}`)
-    const { token } = await res.json()
-    
-    const { data: queueData } = await supabase
-      .from('queue').select('*')
-      .eq('room_id', targetRoom)
-      .order('added_at', { ascending: true })
-    
-    if (queueData) {
-      setQueue(queueData as QueueItem[])
-      queueRef.current = queueData as QueueItem[]           // ← ref'i hemen güncelle
-      startedAtRef.current = queueData[0]?.started_at ?? null  // ← ref'i hemen güncelle
+  const joinVoice = async (targetRoom: string) => {
+    if (isInVoice && voiceRoom === targetRoom) { leaveVoice(); return }
+    try {
+      const res = await fetch(`/api/livekit-token?room=${targetRoom}&username=${username}`)
+      const { token } = await res.json()
+
+      const { data: queueData } = await supabase
+        .from('queue').select('*')
+        .eq('room_id', targetRoom)
+        .order('added_at', { ascending: true })
+
+      const { data: musicState } = await supabase
+        .from('music_state')
+        .select('*')
+        .eq('room_id', targetRoom)
+        .maybeSingle()
+
+      if (queueData) {
+        setQueue(queueData as QueueItem[])
+        queueRef.current = queueData as QueueItem[]
+        // queue started_at yoksa music_state.started_at'i fallback olarak kullan
+        const queueStartedAt = queueData[0]?.started_at ?? null
+        startedAtRef.current = queueStartedAt ?? musicState?.started_at ?? null
+      }
+
+      let becomeHost = false
+      if (!musicState || !musicState.host_username) {
+        await supabase.from('music_state').upsert({
+          room_id: targetRoom,
+          host_username: username,
+          is_playing: false,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'room_id' })
+        becomeHost = true
+        initialIsPlayingRef.current = true
+        setHostUsername(username)
+      } else {
+        initialIsPlayingRef.current = musicState.is_playing ?? true
+        setHostUsername(musicState.host_username)
+      }
+
+      isHostRef.current = becomeHost
+      setIsHost(becomeHost)
+
+      // voice_presence kaydı ekle
+      await supabase.from('voice_presence').upsert(
+        { room_id: targetRoom, username, joined_at: new Date().toISOString() },
+        { onConflict: 'room_id,username' }
+      )
+
+      setLiveKitToken(token)
+      setVoiceRoom(targetRoom)
+      setIsInVoice(true)
+      setSidebarOpen(false)
+    } catch {
+      alert('Ses kanalına bağlanılamadı')
+    }
+  }
+
+  const leaveVoice = async () => {
+    // voice_presence kaydını sil
+    if (voiceRoom && username) {
+      await supabase.from('voice_presence')
+        .delete()
+        .eq('room_id', voiceRoom)
+        .eq('username', username)
     }
 
-    setLiveKitToken(token)
-    setVoiceRoom(targetRoom)
-    setIsInVoice(true)
-  } catch {
-    alert('Ses kanalına bağlanılamadı')
-  }
-}
+    if (isHostRef.current && voiceRoom) {
+      const others = voiceParticipantsRef.current.filter(p => p !== username)
+      const nextHost = others[0] || null
+      await supabase.from('music_state').upsert({
+        room_id: voiceRoom,
+        host_username: nextHost,
+        is_playing: false,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'room_id' })
+    }
 
-  const leaveVoice = () => {
+    setIsHost(false)
+    isHostRef.current = false
+    setHostUsername('')
     setIsInVoice(false)
     setLiveKitToken('')
     setVoiceRoom('')
     setSpeaking(new Set())
     setVoiceParticipants([])
     setQueue([])
+    setScreenTrack(null)
   }
 
   // ── Chat ─────────────────────────────────────────────────────────────────
@@ -714,14 +982,29 @@ const joinVoice = async (targetRoom: string) => {
       alert('Video bilgisi alınamadı. Bağlantınızı kontrol edin.')
       return
     }
+    // İlk şarkıysa started_at'i hemen set et ve music_state'i güncelle
     const isFirstSong = queueRef.current.length === 0
+    const firstStartedAt = isFirstSong ? new Date().toISOString() : undefined
+
     const { error } = await supabase.from('queue').insert({
       room_id: voiceRoom, video_id: videoId, title,
       thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
       added_by: username,
-      started_at: isFirstSong ? new Date().toISOString() : null,
+      ...(firstStartedAt ? { started_at: firstStartedAt } : {}),
     })
     if (error) { alert('Kuyruğa eklenemedi: ' + error.message); return }
+
+    if (isFirstSong && firstStartedAt) {
+      startedAtRef.current = firstStartedAt
+      await supabase.from('music_state').upsert({
+        room_id: voiceRoom,
+        current_video_id: videoId,
+        started_at: firstStartedAt,
+        is_playing: true,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'room_id' })
+    }
+
     setQueueInput('')
     refetchQueue()
   }
@@ -729,24 +1012,43 @@ const joinVoice = async (targetRoom: string) => {
   const removeFromQueue = async (id: string) => {
     const { error } = await supabase.from('queue').delete().eq('id', id)
     if (error) alert('Silinemedi: ' + error.message)
-    else refetchQueue() 
+    else refetchQueue()
   }
 
   const handleNext = async () => {
+    if (!isHostRef.current) return
     const [first, ...rest] = queueRef.current
     if (!first) return
     await supabase.from('queue').delete().eq('id', first.id)
+    const nextStartedAt = new Date().toISOString()
     if (rest[0]) {
       await supabase.from('queue')
-        .update({ started_at: new Date().toISOString() })
+        .update({ started_at: nextStartedAt })
         .eq('id', rest[0].id)
         .is('started_at', null)
     }
+    if (voiceRoom) {
+      await supabase.from('music_state').upsert({
+        room_id: voiceRoom,
+        current_video_id: rest[0]?.video_id ?? null,
+        started_at: rest[0] ? nextStartedAt : null,
+        is_playing: !!rest[0],
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'room_id' })
+    }
   }
 
-  const togglePlay = () => {
-    if (!playerRef.current) return
-    if (isPlaying) { playerRef.current.pauseVideo() } else { playerRef.current.playVideo() }
+  const togglePlay = async () => {
+    if (!isHostRef.current || !playerRef.current) return
+    const newPlaying = !isPlaying
+    if (newPlaying) { playerRef.current.playVideo() } else { playerRef.current.pauseVideo() }
+    if (voiceRoom) {
+      await supabase.from('music_state').upsert({
+        room_id: voiceRoom,
+        is_playing: newPlaying,
+        updated_at: new Date().toISOString(),
+      }, { onConflict: 'room_id' })
+    }
   }
 
   const handleVolumeChange = (v: number) => {
@@ -755,19 +1057,35 @@ const joinVoice = async (targetRoom: string) => {
   }
 
   // ── JSX ──────────────────────────────────────────────────────────────────
-const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
+  const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
 
   return (
-    <div className="flex h-screen" style={{ backgroundColor: '#0a0a0a', color: '#ededed' }}>
+    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#0a0a0a', color: '#ededed' }}>
 
       {/* Gizli YouTube player container */}
       <div id="yt-player-container" style={{ position: 'fixed', top: -9999, left: -9999, width: 1, height: 1, overflow: 'hidden' }}>
         <div id="yt-player" />
       </div>
 
-      {/* ── Sol Sidebar ─────────────────────────────────────────────────── */}
-      <div className="w-60 flex flex-col flex-shrink-0" style={{ backgroundColor: '#111111', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* Mobil overlay — sidebar açıkken arka planı karart */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 md:hidden"
+          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
 
+      {/* ── Sol Sidebar ─────────────────────────────────────────────────── */}
+      <div
+        className={`
+          fixed md:relative z-50 md:z-auto
+          w-60 h-full flex flex-col flex-shrink-0
+          transition-transform duration-300 ease-in-out
+          ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
+        `}
+        style={{ backgroundColor: '#111111', borderRight: '1px solid rgba(255,255,255,0.08)' }}
+      >
         <div className="px-4 py-4 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
           <h1 className="font-bold text-white text-base flex items-center gap-2">
             <span style={{ color: '#3ecf8e' }}><IconMusic /></span>
@@ -795,7 +1113,7 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
             ))}
           </div>
 
-          {/* Ses kanalları — textRoom'dan bağımsız */}
+          {/* Ses kanalları */}
           <div>
             <p className="text-xs font-semibold uppercase px-2 mb-1" style={{ color: '#a1a1a1' }}>Ses</p>
             {ROOMS.map((r) => {
@@ -828,6 +1146,7 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
                       {voiceParticipants.map((user) => {
                         const isSpeaking = speaking.has(user)
                         const isMe = user === username
+                        const isVoiceHost = user === hostUsername
                         return (
                           <div key={user}
                             className="flex items-center gap-2 px-2 py-1 rounded-lg transition-all duration-200"
@@ -843,6 +1162,7 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
                             <span className="text-xs truncate flex-1" style={{ color: isSpeaking ? '#ededed' : '#a1a1a1' }}>
                               {user}{isMe ? ' (sen)' : ''}
                             </span>
+                            {isVoiceHost && <span title="Müzik Hostu" style={{ fontSize: '10px' }}>👑</span>}
                             {isSpeaking && (
                               <div className="flex gap-0.5 items-end h-2.5 flex-shrink-0">
                                 {[0, 0.15, 0.3].map((d, i) => (
@@ -866,6 +1186,7 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
           <LiveKitRoom audio={true} token={liveKitToken} serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL} connect={true} style={{ display: 'contents' }}>
             <SpeakerListener onSpeakersChange={setSpeaking} />
             <VoiceParticipantListener onParticipantsChange={setVoiceParticipants} />
+            <ScreenShareViewer onScreenShare={setScreenTrack} />
             <VoiceControls onLeave={leaveVoice} />
           </LiveKitRoom>
         )}
@@ -877,10 +1198,11 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
               {username[0]?.toUpperCase()}
             </div>
             <span className="text-sm truncate text-white">{username}</span>
+            {isHost && <span title="Müzik Hostu" style={{ fontSize: '12px', flexShrink: 0 }}>👑</span>}
           </div>
           <button onClick={() => { localStorage.removeItem('username'); router.push('/') }}
             className="text-xs px-2 py-1 rounded transition-all duration-200 hover:bg-white/10"
-            style={{ color: '#a1a1a1' }} />
+            style={{ color: '#a1a1a1' }}>↪</button>
         </div>
       </div>
 
@@ -888,24 +1210,41 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
       <div className="flex-1 flex flex-col min-w-0">
 
         {/* Header */}
-        <div className="px-5 py-3.5 flex items-center gap-2 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="px-4 md:px-5 py-3.5 flex items-center gap-2 md:gap-3 flex-shrink-0"
+          style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+
+          {/* Hamburger — sadece mobilde */}
+          <button
+            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg transition-colors flex-shrink-0"
+            style={{ color: '#a1a1a1' }}
+            onClick={() => setSidebarOpen(true)}>
+            <IconHamburger />
+          </button>
+
           <span style={{ color: '#555' }}><IconHash /></span>
           <h2 className="font-semibold text-white text-sm">{textRoomName}</h2>
           {isInVoice && (
-            <span className="ml-2 text-xs px-2 py-0.5 rounded-full flex items-center gap-1"
+            <span className="hidden sm:flex ml-1 text-xs px-2 py-0.5 rounded-full items-center gap-1"
               style={{ backgroundColor: 'rgba(62,207,142,0.12)', color: '#3ecf8e' }}>
               <IconVolume /> {ROOMS.find(r => r.id === voiceRoom)?.name} sesinde
             </span>
           )}
-          <span className="ml-auto text-xs" style={{ color: '#a1a1a1' }}>{onlineUsers.length} çevrimiçi</span>
+          {isInVoice && isHost && (
+            <span className="hidden sm:inline text-xs px-2 py-0.5 rounded-full"
+              style={{ backgroundColor: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}>
+              👑 Host
+            </span>
+          )}
+          <span className="ml-auto text-xs flex-shrink-0" style={{ color: '#a1a1a1' }}>{onlineUsers.length} çevrimiçi</span>
         </div>
 
-        {/* Müzik çalar barı — sadece ses kanalındayken */}
+        {/* Müzik çalar barı */}
         {isInVoice && currentSong && (
           <MusicPlayerBar
             song={currentSong}
             isPlaying={isPlaying}
             volume={volume}
+            isHost={isHost}
             onTogglePlay={togglePlay}
             onNext={handleNext}
             onPrev={() => {}}
@@ -913,8 +1252,63 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
           />
         )}
 
+        {/* Ekran paylaşımı görüntüleyici */}
+        {isInVoice && screenTrack && (
+          <div
+            ref={screenContainerRef}
+            className="relative flex-shrink-0 mx-2 md:mx-4 mt-2 md:mt-3 rounded-xl overflow-hidden group cursor-pointer"
+            style={{
+              backgroundColor: '#000',
+              border: '1px solid rgba(255,255,255,0.1)',
+            }}
+            onDoubleClick={toggleFullscreen}
+          >
+            <video
+              ref={screenVideoRef}
+              autoPlay
+              playsInline
+              muted
+              className="w-full block object-contain"
+              style={{ maxHeight: isFullscreen ? '100vh' : 'min(280px, 40vw)' }}
+            />
+
+            {/* Sol üst — etiket */}
+            <div className="absolute top-2 left-2 text-xs px-2 py-1 rounded-full flex items-center gap-1.5"
+              style={{ backgroundColor: 'rgba(0,0,0,0.65)', color: '#ededed', backdropFilter: 'blur(4px)' }}>
+              🖥️ Ekran Paylaşımı
+            </div>
+
+            {/* Sağ üst — tam ekran butonu (hover'da görünür) */}
+            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <button
+                onClick={(e) => { e.stopPropagation(); toggleFullscreen() }}
+                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/20"
+                style={{ backgroundColor: 'rgba(0,0,0,0.65)', color: '#ededed', backdropFilter: 'blur(4px)' }}
+                title={isFullscreen ? 'Küçült' : 'Tam Ekran'}>
+                {isFullscreen ? <IconExitFullscreen /> : <IconFullscreen />}
+              </button>
+            </div>
+
+            {/* Alt orta — ipucu (hover'da görünür, fullscreen değilken) */}
+            {!isFullscreen && (
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-70 transition-opacity whitespace-nowrap"
+                style={{ backgroundColor: 'rgba(0,0,0,0.6)', color: '#ededed' }}>
+                Çift tıkla → tam ekran
+              </div>
+            )}
+
+            {/* Tam ekranda ESC ipucu */}
+            {isFullscreen && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full"
+                style={{ backgroundColor: 'rgba(0,0,0,0.6)', color: '#ededed' }}>
+                ESC veya çift tıkla → küçült
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Mesajlar */}
-        <div className="flex-1 overflow-y-auto px-5 py-4 flex flex-col gap-1">
+        <div className="flex-1 overflow-y-auto px-4 md:px-5 py-4 flex flex-col gap-1">
           {messages.length === 0 && (
             <p className="text-center text-sm mt-8" style={{ color: '#a1a1a1' }}>
               Henüz mesaj yok. İlk mesajı sen at! 💬
@@ -926,7 +1320,7 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
             const showHeader = !prevMsg || prevMsg.username !== msg.username
             return (
               <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${showHeader && i > 0 ? 'mt-3' : ''}`}>
-                <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-sm`}>
+                <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-xs sm:max-w-sm`}>
                   {showHeader && (
                     <div className="flex items-center gap-2 mb-1 px-1">
                       <span className="text-xs font-medium" style={{ color: getUserColor(msg.username) }}>{msg.username}</span>
@@ -949,7 +1343,7 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
         </div>
 
         {/* Input */}
-        <div className="px-4 py-3 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="px-3 md:px-4 py-3 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
           <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
             style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
             <input className="flex-1 bg-transparent text-white text-sm outline-none" style={{ color: '#ededed' }}
@@ -964,12 +1358,13 @@ const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
         </div>
       </div>
 
-      {/* ── Sağ Sidebar — Kuyruk (üst) + Kullanıcılar (alt) ────────────── */}
-      <div className="w-64 flex flex-col flex-shrink-0" style={{ backgroundColor: '#111111', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* ── Sağ Sidebar — lg altında gizli ──────────────────────────────── */}
+      <div className="hidden lg:flex w-64 flex-col flex-shrink-0"
+        style={{ backgroundColor: '#111111', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
         {isInVoice && (
           <QueuePanel queue={queue} queueInput={queueInput} onInputChange={setQueueInput} onAdd={addToQueue} onRemove={removeFromQueue} />
         )}
-        <UsersPanel users={mergedUsers} speaking={speaking} currentUser={username} />
+        <UsersPanel users={mergedUsers} speaking={speaking} currentUser={username} hostUsername={hostUsername} />
       </div>
 
       <style>{`
