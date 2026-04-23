@@ -350,15 +350,7 @@ function SpeakerListener({ onSpeakersChange }: { onSpeakersChange: (s: Set<strin
     const handler = (speakers: Array<{ identity: string }>) => {
       onSpeakersChange(new Set(speakers.map(s => s.identity)))
     }
-    room.on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
-  track.on('audioLevel', (level) => {
-    if (level > 0.05) {
-      setSpeaking(prev => new Set(prev).add(participant.identity))
-    } else {
-      setSpeaking(prev => { const s = new Set(prev); s.delete(participant.identity); return s })
-    }
-  })
-})
+    room.on(RoomEvent.ActiveSpeakersChanged, handler)
     return () => { room.off(RoomEvent.ActiveSpeakersChanged, handler) }
   }, [room, onSpeakersChange])
   return null
