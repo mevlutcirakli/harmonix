@@ -5,8 +5,6 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 
 // ─── Modül-level auth store ───────────────────────────────────────────────────
-// useEffect + setState olmadan auth state'i yönetmek için.
-// notifyAuth() çağrıldığında useSyncExternalStore re-render tetikler.
 
 let _authListeners: Array<() => void> = []
 const subscribeAuth = (fn: () => void) => {
@@ -18,9 +16,9 @@ const notifyAuth = () => _authListeners.forEach(fn => fn())
 // ─── Sabitler ────────────────────────────────────────────────────────────────
 
 const ROOMS = [
-  { id: 'genel', name: 'genel', emoji: '💬' },
-  { id: 'muzik', name: 'müzik', emoji: '🎵' },
-  { id: 'oyun', name: 'oyun', emoji: '🎮' },
+  { id: 'genel', name: 'genel' },
+  { id: 'muzik', name: 'müzik' },
+  { id: 'oyun', name: 'oyun' },
 ]
 
 const USER_COLORS = ['#3ecf8e', '#6366f1', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#14b8a6']
@@ -30,6 +28,8 @@ function getUserColor(username: string) {
   for (let i = 0; i < username.length; i++) hash = username.charCodeAt(i) + ((hash << 5) - hash)
   return USER_COLORS[Math.abs(hash) % USER_COLORS.length]
 }
+
+// ─── SVG İkonlar ─────────────────────────────────────────────────────────────
 
 const IconVolume = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -47,11 +47,24 @@ const IconHash = () => (
   </svg>
 )
 
+const IconLogOut = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16 17 21 12 16 7"/>
+    <line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+)
+
+const IconArrowLeft = () => (
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M19 12H5"/>
+    <polyline points="12 19 5 12 12 5"/>
+  </svg>
+)
+
 // ─── Ana Sayfa ────────────────────────────────────────────────────────────────
 
 export default function Home() {
-  // SSR: '' (server snapshot) → hydration uyumu; client: localStorage değeri
-  // setState yok — notifyAuth() ile event-driven re-render
   const storedUsername = useSyncExternalStore(
     subscribeAuth,
     () => localStorage.getItem('username') || '',
@@ -59,12 +72,10 @@ export default function Home() {
   )
   const loggedIn = !!storedUsername
 
-  // Sadece giriş formu input alanı için state
   const [inputUsername, setInputUsername] = useState('')
   const [voicePresence, setVoicePresence] = useState<Record<string, string[]>>({})
   const router = useRouter()
 
-  // Anlık ses kanalı varlığını çek ve subscribe ol
   useEffect(() => {
     const fetchPresence = () => {
       supabase.from('voice_presence').select('room_id, username').then(({ data }) => {
@@ -90,7 +101,7 @@ export default function Home() {
   const handleLogin = () => {
     if (!inputUsername.trim()) return alert('Bir isim gir!')
     localStorage.setItem('username', inputUsername.trim())
-    notifyAuth() // useSyncExternalStore'u yeni değeri okumaya zorlar
+    notifyAuth()
   }
 
   const handleLogout = () => {
@@ -99,142 +110,311 @@ export default function Home() {
     notifyAuth()
   }
 
-  const activeRooms = ROOMS.filter(r => (voicePresence[r.id] || []).length > 0)
+  // ─── Giriş ekranı ─────────────────────────────────────────────────────────
 
   if (!loggedIn) return (
-    <main style={{ backgroundColor: '#0a0a0a' }} className="min-h-screen flex items-center justify-center p-4">
-      <div style={{ backgroundColor: '#111111', border: '1px solid rgba(255,255,255,0.08)' }} className="p-8 rounded-xl w-full max-w-sm">
-        <div className="mb-6">
-          <h1 className="text-2xl font-bold text-white mb-1">🎵 Harmonix</h1>
-          <p style={{ color: '#a1a1a1' }} className="text-sm">Devam etmek için bir kullanıcı adı gir</p>
+    <main style={{
+      backgroundColor: '#080808',
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: 16,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+
+        {/* Giriş kartı */}
+        <div style={{
+          backgroundColor: '#0f0f0f',
+          border: '1px solid rgba(255,255,255,0.07)',
+          borderRadius: 12,
+          padding: 32,
+          width: 280,
+          boxSizing: 'border-box',
+        }}>
+          <div style={{ marginBottom: 24 }}>
+            <h1 style={{ fontSize: 18, fontWeight: 500, color: '#f0f0f0', margin: 0, lineHeight: 1 }}>
+              Harmonix
+            </h1>
+            <p style={{ color: '#888', fontSize: 13, margin: '8px 0 0' }}>
+              Devam etmek için kullanıcı adı gir
+            </p>
+          </div>
+
+          <input
+            style={{
+              display: 'block',
+              width: '100%',
+              height: 36,
+              fontSize: 13,
+              backgroundColor: '#161616',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: 8,
+              color: '#f0f0f0',
+              padding: '0 10px',
+              outline: 'none',
+              boxSizing: 'border-box',
+              transition: 'border-color 150ms ease',
+              marginBottom: 8,
+            }}
+            placeholder="Kullanıcı adın"
+            value={inputUsername}
+            onChange={(e) => setInputUsername(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+            onFocus={(e) => { e.currentTarget.style.borderColor = '#3ecf8e' }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
+          />
+
+          <button
+            onClick={handleLogin}
+            style={{
+              display: 'block',
+              width: '100%',
+              height: 36,
+              backgroundColor: '#3ecf8e',
+              color: '#080808',
+              fontWeight: 500,
+              fontSize: 13,
+              borderRadius: 8,
+              cursor: 'pointer',
+              transition: 'opacity 150ms ease',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
+            onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
+          >
+            Giriş Yap
+          </button>
         </div>
 
-        {/* Aktif sesli kanallar — giriş öncesi */}
-        {activeRooms.length > 0 && (
-          <div className="mb-5 p-3 rounded-xl" style={{ backgroundColor: 'rgba(62,207,142,0.06)', border: '1px solid rgba(62,207,142,0.12)' }}>
-            <p className="text-xs font-semibold uppercase mb-3 flex items-center gap-1.5" style={{ color: '#3ecf8e' }}>
-              <IconVolume /> Şu an sesli
-            </p>
-            {activeRooms.map(r => {
-              const users = voicePresence[r.id] || []
-              return (
-                <div key={r.id} className="mb-3 last:mb-0">
-                  <div className="flex items-center gap-1.5 mb-1.5">
-                    <span className="text-xs font-medium" style={{ color: '#ededed' }}>{r.name}</span>
-                    <span className="text-xs ml-auto px-1.5 py-0.5 rounded-full"
-                      style={{ backgroundColor: 'rgba(62,207,142,0.15)', color: '#3ecf8e' }}>
-                      {users.length} kişi
+        {/* Odalar paneli */}
+        <div style={{ width: 200, paddingTop: 4 }}>
+          <p style={{
+            fontSize: 10,
+            fontWeight: 500,
+            letterSpacing: '0.08em',
+            color: '#444',
+            textTransform: 'uppercase',
+            margin: '0 0 6px 0',
+            padding: '0 6px',
+          }}>
+            Sesli Odalar
+          </p>
+          {ROOMS.map(r => {
+            const users = voicePresence[r.id] || []
+            return (
+              <div
+                key={r.id}
+                style={{
+                  borderRadius: 6,
+                  padding: '5px 8px',
+                  transition: 'background-color 150ms ease',
+                  cursor: 'default',
+                  marginBottom: 2,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+                  <span style={{ color: users.length > 0 ? '#3ecf8e' : '#444', display: 'flex', flexShrink: 0 }}>
+                    <IconVolume />
+                  </span>
+                  <span style={{ fontSize: 13, color: users.length > 0 ? '#f0f0f0' : '#888' }}>
+                    {r.name}
+                  </span>
+                  {users.length > 0 && (
+                    <span style={{ fontSize: 10, color: '#3ecf8e', marginLeft: 'auto' }}>
+                      {users.length}
                     </span>
-                  </div>
-                  <div className="flex flex-wrap gap-1">
-                    {users.slice(0, 5).map(user => (
-                      <div key={user}
-                        className="flex items-center gap-1 px-1.5 py-0.5 rounded-full"
-                        style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}
-                        title={user}>
-                        <div className="w-4 h-4 rounded-full flex items-center justify-center font-bold flex-shrink-0"
-                          style={{ backgroundColor: getUserColor(user), color: '#0a0a0a', fontSize: '9px' }}>
-                          {user[0]?.toUpperCase()}
-                        </div>
-                        <span style={{ color: '#a1a1a1', fontSize: '11px' }}>{user}</span>
+                  )}
+                </div>
+                {users.length > 0 && (
+                  <div style={{ paddingLeft: 20, marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
+                    {users.slice(0, 5).map(u => (
+                      <div
+                        key={u}
+                        style={{
+                          width: 16, height: 16, borderRadius: '50%',
+                          backgroundColor: getUserColor(u),
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                          fontSize: 8, color: '#080808', fontWeight: 600,
+                          flexShrink: 0,
+                        }}
+                        title={u}
+                      >
+                        {u[0]?.toUpperCase()}
                       </div>
                     ))}
                     {users.length > 5 && (
-                      <div className="flex items-center px-1.5 py-0.5 rounded-full"
-                        style={{ backgroundColor: 'rgba(255,255,255,0.05)' }}>
-                        <span style={{ color: '#a1a1a1', fontSize: '11px' }}>+{users.length - 5} kişi</span>
-                      </div>
+                      <span style={{ fontSize: 10, color: '#888', lineHeight: '16px' }}>
+                        +{users.length - 5}
+                      </span>
                     )}
                   </div>
-                </div>
-              )
-            })}
-          </div>
-        )}
+                )}
+              </div>
+            )
+          })}
+        </div>
 
-        <input
-          className="w-full px-4 py-2.5 rounded-lg text-white text-sm outline-none mb-3 transition-all duration-200"
-          style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.1)' }}
-          placeholder="Kullanıcı adın"
-          value={inputUsername}
-          onChange={(e) => setInputUsername(e.target.value)}
-          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          onFocus={(e) => e.currentTarget.style.borderColor = '#3ecf8e'}
-          onBlur={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.1)'}
-        />
-        <button
-          onClick={handleLogin}
-          className="w-full py-2.5 rounded-lg text-sm font-semibold transition-all duration-200 hover:opacity-90"
-          style={{ backgroundColor: '#3ecf8e', color: '#0a0a0a' }}
-        >
-          Giriş Yap
-        </button>
       </div>
     </main>
   )
 
+  // ─── Ana ekran (giriş yapılmış) ────────────────────────────────────────────
+
   return (
-    <div className="flex h-screen" style={{ backgroundColor: '#0a0a0a', color: '#ededed' }}>
-      {/* Sol Sidebar */}
-      <div className="w-60 flex flex-col" style={{ backgroundColor: '#111111', borderRight: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="px-4 py-4" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <h1 className="font-bold text-white text-base">🎵 Harmonix</h1>
+    <div style={{ display: 'flex', height: '100vh', backgroundColor: '#080808', color: '#f0f0f0', overflow: 'hidden' }}>
+
+      {/* Sol sidebar */}
+      <div style={{
+        width: 224,
+        display: 'flex',
+        flexDirection: 'column',
+        backgroundColor: '#0f0f0f',
+        borderRight: '1px solid rgba(255,255,255,0.07)',
+        flexShrink: 0,
+      }}>
+
+        {/* Logo */}
+        <div style={{
+          height: 48,
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 16px',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 15, fontWeight: 500, color: '#f0f0f0' }}>Harmonix</span>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-4">
+        {/* Kanal listesi */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '12px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+        }}>
 
           {/* Metin kanalları */}
           <div>
-            <p className="text-xs font-semibold uppercase px-2 mb-1" style={{ color: '#a1a1a1' }}>Kanallar</p>
+            <p style={{
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: '0.08em',
+              color: '#444',
+              textTransform: 'uppercase',
+              padding: '0 10px',
+              marginBottom: 4,
+            }}>
+              Kanallar
+            </p>
             {ROOMS.map((room) => (
               <button
                 key={room.id}
                 onClick={() => router.push(`/room/${room.id}`)}
-                className="w-full text-left px-3 py-2 rounded-lg mb-0.5 flex items-center gap-2 text-sm transition-all duration-200 hover:bg-white/5"
-                style={{ color: '#a1a1a1' }}
+                style={{
+                  width: '100%',
+                  textAlign: 'left',
+                  height: 32,
+                  padding: '0 10px',
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  fontSize: 13,
+                  color: '#888',
+                  backgroundColor: 'transparent',
+                  transition: 'background-color 150ms ease',
+                  cursor: 'pointer',
+                  marginBottom: 1,
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
               >
-                <span style={{ color: '#555' }}><IconHash /></span>
+                <span style={{ color: '#444', display: 'flex', flexShrink: 0 }}><IconHash /></span>
                 <span>{room.name}</span>
               </button>
             ))}
           </div>
 
-          {/* Ses kanalları — anlık katılımcılarla */}
+          {/* Ses kanalları */}
           <div>
-            <p className="text-xs font-semibold uppercase px-2 mb-1" style={{ color: '#a1a1a1' }}>Ses</p>
+            <p style={{
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: '0.08em',
+              color: '#444',
+              textTransform: 'uppercase',
+              padding: '0 10px',
+              marginBottom: 4,
+            }}>
+              Ses
+            </p>
             {ROOMS.map((room) => {
               const participants = voicePresence[room.id] || []
               const hasParticipants = participants.length > 0
               return (
-                <div key={room.id} className="mb-0.5">
+                <div key={room.id} style={{ marginBottom: 2 }}>
                   <button
                     onClick={() => router.push(`/room/${room.id}`)}
-                    className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm transition-all duration-200 hover:bg-white/5"
-                    style={{ color: hasParticipants ? '#ededed' : '#a1a1a1' }}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      height: 32,
+                      padding: '0 10px',
+                      borderRadius: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: 13,
+                      color: hasParticipants ? '#f0f0f0' : '#888',
+                      backgroundColor: 'transparent',
+                      transition: 'background-color 150ms ease',
+                      cursor: 'pointer',
+                    }}
+                    onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+                    onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
                   >
-                    <span style={{ color: hasParticipants ? '#3ecf8e' : '#555' }}><IconVolume /></span>
+                    <span style={{ color: hasParticipants ? '#3ecf8e' : '#444', display: 'flex', flexShrink: 0 }}>
+                      <IconVolume />
+                    </span>
                     <span>{room.name}</span>
                     {hasParticipants && (
-                      <span className="ml-auto text-xs px-1.5 py-0.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: 'rgba(62,207,142,0.15)', color: '#3ecf8e' }}>
+                      <span style={{
+                        marginLeft: 'auto',
+                        fontSize: 10,
+                        padding: '1px 6px',
+                        borderRadius: 20,
+                        backgroundColor: 'rgba(62,207,142,0.12)',
+                        color: '#3ecf8e',
+                        flexShrink: 0,
+                      }}>
                         {participants.length}
                       </span>
                     )}
                   </button>
 
                   {hasParticipants && (
-                    <div className="ml-4 mt-0.5 flex flex-col gap-0.5">
+                    <div style={{ paddingLeft: 24, marginTop: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                       {participants.map(user => (
-                        <div key={user} className="flex items-center gap-2 px-2 py-1 rounded-lg">
-                          <div className="relative flex-shrink-0">
-                            <div className="w-5 h-5 rounded-full flex items-center justify-center font-bold"
-                              style={{ backgroundColor: getUserColor(user), color: '#0a0a0a', fontSize: '10px' }}>
-                              {user[0]?.toUpperCase()}
-                            </div>
-                            <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border"
-                              style={{ backgroundColor: '#3ecf8e', borderColor: '#111111' }} />
+                        <div key={user} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '2px 8px' }}>
+                          <div style={{
+                            width: 18, height: 18, borderRadius: '50%',
+                            backgroundColor: getUserColor(user),
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: 8, color: '#080808', fontWeight: 600, flexShrink: 0,
+                          }}>
+                            {user[0]?.toUpperCase()}
                           </div>
-                          <span className="text-xs truncate" style={{ color: '#a1a1a1' }}>
+                          <span style={{
+                            fontSize: 11,
+                            color: '#888',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}>
                             {user}{user === storedUsername ? ' (sen)' : ''}
                           </span>
                         </div>
@@ -247,32 +427,57 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="px-3 py-3 flex items-center justify-between" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-              style={{ backgroundColor: getUserColor(storedUsername), color: '#0a0a0a' }}>
+        {/* Kullanıcı alanı */}
+        <div style={{
+          height: 52,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 12px',
+          borderTop: '1px solid rgba(255,255,255,0.07)',
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <div style={{
+              width: 24, height: 24, borderRadius: '50%',
+              backgroundColor: getUserColor(storedUsername),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 10, color: '#080808', fontWeight: 600, flexShrink: 0,
+            }}>
               {storedUsername[0]?.toUpperCase()}
             </div>
-            <span className="text-sm truncate text-white">{storedUsername}</span>
+            <span style={{ fontSize: 13, color: '#f0f0f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {storedUsername}
+            </span>
           </div>
           <button
             onClick={handleLogout}
-            className="text-xs px-2 py-1 rounded transition-all duration-200 hover:bg-white/10"
-            style={{ color: '#a1a1a1' }}
+            style={{
+              width: 28, height: 28, borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#888',
+              transition: 'background-color 150ms ease',
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
             title="Çıkış"
           >
-            ↪
+            <IconLogOut />
           </button>
         </div>
       </div>
 
-      {/* Ana İçerik */}
-      <div className="flex-1 flex items-center justify-center">
-        <div className="text-center">
-          <p className="text-5xl mb-3">👈</p>
-          <p className="text-base" style={{ color: '#a1a1a1' }}>Bir oda seç</p>
+      {/* Boş içerik alanı */}
+      <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ color: '#444', display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+            <IconArrowLeft />
+          </div>
+          <p style={{ fontSize: 13, color: '#888', margin: 0 }}>Bir kanal seç</p>
         </div>
       </div>
+
     </div>
   )
 }

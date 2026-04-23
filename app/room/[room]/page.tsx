@@ -31,8 +31,8 @@ interface YTPlayerInstance {
 
 // ─── SVG İkonlar ────────────────────────────────────────────────────────────
 
-const IconMic = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconMic = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/>
     <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
     <line x1="12" y1="19" x2="12" y2="22"/>
@@ -40,8 +40,8 @@ const IconMic = () => (
   </svg>
 )
 
-const IconMicOff = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconMicOff = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="2" y1="2" x2="22" y2="22"/>
     <path d="M18.89 13.23A7.12 7.12 0 0 0 19 12v-2"/>
     <path d="M5 10v2a7 7 0 0 0 12 4.9"/>
@@ -52,23 +52,23 @@ const IconMicOff = () => (
   </svg>
 )
 
-const IconCamera = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconCamera = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <polygon points="23 7 16 12 23 17 23 7"/>
     <rect x="1" y="5" width="15" height="14" rx="2" ry="2"/>
   </svg>
 )
 
-const IconCameraOff = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconCameraOff = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="2" y1="2" x2="22" y2="22"/>
     <path d="M16 16H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h3"/>
     <polygon points="23 7 16 12 23 17 23 7"/>
   </svg>
 )
 
-const IconScreen = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconScreen = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <rect x="2" y="3" width="20" height="14" rx="2"/>
     <line x1="8" y1="21" x2="16" y2="21"/>
     <line x1="12" y1="17" x2="12" y2="21"/>
@@ -77,8 +77,8 @@ const IconScreen = () => (
   </svg>
 )
 
-const IconPhoneOff = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const IconPhoneOff = ({ size = 16 }: { size?: number }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <line x1="1" y1="1" x2="23" y2="23"/>
     <path d="M16.5 16.5L19 19a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.42 19.42 0 0 1-3.99-3.99m-1.42-4.47A19.79 19.79 0 0 1 3 5.18 2 2 0 0 1 5 3l3 0a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 10.91"/>
     <path d="M14.31 14.31l1.28-1.28a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 15.24V18"/>
@@ -102,7 +102,7 @@ const IconHash = () => (
 )
 
 const IconMusic = () => (
-  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M9 18V5l12-2v13"/>
     <circle cx="6" cy="18" r="3"/>
     <circle cx="18" cy="16" r="3"/>
@@ -168,6 +168,36 @@ const IconHamburger = () => (
   </svg>
 )
 
+const IconCrown = () => (
+  <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+    <path d="M3 17l1-8 5 4 3-7 3 7 5-4 1 8H3z"/>
+    <rect x="3" y="18" width="18" height="2" rx="1"/>
+  </svg>
+)
+
+const IconLogOut = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+    <polyline points="16 17 21 12 16 7"/>
+    <line x1="21" y1="12" x2="9" y2="12"/>
+  </svg>
+)
+
+const IconSend = () => (
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <line x1="22" y1="2" x2="11" y2="13"/>
+    <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+  </svg>
+)
+
+const IconMonitor = () => (
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <rect x="2" y="3" width="20" height="14" rx="2"/>
+    <line x1="8" y1="21" x2="16" y2="21"/>
+    <line x1="12" y1="17" x2="12" y2="21"/>
+  </svg>
+)
+
 // ─── Sabitler ────────────────────────────────────────────────────────────────
 
 const ROOMS = [
@@ -230,30 +260,84 @@ function VoiceControls({ onLeave }: { onLeave: () => void }) {
   const toggleScreen = async () => { await localParticipant.setScreenShareEnabled(!screen); setScreen(!screen) }
 
   return (
-    <div
-      className="px-2 py-2 flex items-center gap-1 flex-shrink-0"
-      style={{ borderTop: '1px solid rgba(255,255,255,0.08)', backgroundColor: '#111111' }}
-    >
-      <button onClick={toggleMic} title={muted ? 'Mikrofonu Aç' : 'Mikrofonu Kapat'}
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-white/10"
-        style={{ color: muted ? '#ef4444' : '#ededed' }}>
-        {muted ? <IconMicOff /> : <IconMic />}
+    <div style={{
+      height: 52,
+      padding: '0 12px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 2,
+      borderTop: '1px solid rgba(255,255,255,0.07)',
+      backgroundColor: '#161616',
+      flexShrink: 0,
+    }}>
+      <button
+        onClick={toggleMic}
+        title={muted ? 'Mikrofonu Aç' : 'Mikrofonu Kapat'}
+        style={{
+          width: 36, height: 36, borderRadius: 6,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: muted ? '#f04444' : '#f0f0f0',
+          backgroundColor: muted ? 'rgba(240,68,68,0.12)' : 'transparent',
+          transition: 'background-color 150ms ease',
+          cursor: 'pointer',
+        }}
+        onMouseEnter={(e) => { if (!muted) e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+        onMouseLeave={(e) => { if (!muted) e.currentTarget.style.backgroundColor = 'transparent' }}
+      >
+        {muted ? <IconMicOff size={20} /> : <IconMic size={20} />}
       </button>
-      <button onClick={toggleCamera} title={camera ? 'Kamerayı Kapat' : 'Kamerayı Aç'}
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-white/10"
-        style={{ color: camera ? '#3ecf8e' : '#a1a1a1' }}>
-        {camera ? <IconCamera /> : <IconCameraOff />}
+
+      <button
+        onClick={toggleCamera}
+        title={camera ? 'Kamerayı Kapat' : 'Kamerayı Aç'}
+        style={{
+          width: 36, height: 36, borderRadius: 6,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: camera ? '#3ecf8e' : '#888',
+          backgroundColor: 'transparent',
+          transition: 'background-color 150ms ease',
+          cursor: 'pointer',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+      >
+        {camera ? <IconCamera size={20} /> : <IconCameraOff size={20} />}
       </button>
-      <button onClick={toggleScreen} title={screen ? 'Paylaşımı Durdur' : 'Ekran Paylaş'}
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-white/10"
-        style={{ color: screen ? '#3ecf8e' : '#a1a1a1' }}>
-        <IconScreen />
+
+      <button
+        onClick={toggleScreen}
+        title={screen ? 'Paylaşımı Durdur' : 'Ekran Paylaş'}
+        style={{
+          width: 36, height: 36, borderRadius: 6,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: screen ? '#3ecf8e' : '#888',
+          backgroundColor: 'transparent',
+          transition: 'background-color 150ms ease',
+          cursor: 'pointer',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+      >
+        <IconScreen size={20} />
       </button>
-      <div className="w-px h-5 mx-1" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
-      <button onClick={onLeave} title="Kanaldan Ayrıl"
-        className="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-200 hover:bg-red-500/20"
-        style={{ color: '#ef4444' }}>
-        <IconPhoneOff />
+
+      <div style={{ width: 1, height: 20, backgroundColor: 'rgba(255,255,255,0.07)', margin: '0 4px' }} />
+
+      <button
+        onClick={onLeave}
+        title="Kanaldan Ayrıl"
+        style={{
+          width: 36, height: 36, borderRadius: 6,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          color: '#f04444',
+          backgroundColor: 'transparent',
+          transition: 'background-color 150ms ease',
+          cursor: 'pointer',
+        }}
+        onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(240,68,68,0.12)' }}
+        onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+      >
+        <IconPhoneOff size={20} />
       </button>
     </div>
   )
@@ -266,7 +350,15 @@ function SpeakerListener({ onSpeakersChange }: { onSpeakersChange: (s: Set<strin
     const handler = (speakers: Array<{ identity: string }>) => {
       onSpeakersChange(new Set(speakers.map(s => s.identity)))
     }
-    room.on(RoomEvent.ActiveSpeakersChanged, handler)
+    room.on(RoomEvent.TrackSubscribed, (track, pub, participant) => {
+  track.on('audioLevel', (level) => {
+    if (level > 0.05) {
+      setSpeaking(prev => new Set(prev).add(participant.identity))
+    } else {
+      setSpeaking(prev => { const s = new Set(prev); s.delete(participant.identity); return s })
+    }
+  })
+})
     return () => { room.off(RoomEvent.ActiveSpeakersChanged, handler) }
   }, [room, onSpeakersChange])
   return null
@@ -294,7 +386,7 @@ function VoiceParticipantListener({ onParticipantsChange }: { onParticipantsChan
   return null
 }
 
-// ─── Ekran Paylaşımı Dinleyici (LiveKitRoom içinde) ──────────────────────────
+// ─── Ekran Paylaşımı Dinleyici ────────────────────────────────────────────────
 
 function ScreenShareViewer({ onScreenShare }: { onScreenShare: (track: MediaStreamTrack | null) => void }) {
   const participants = useParticipants()
@@ -313,7 +405,7 @@ function ScreenShareViewer({ onScreenShare }: { onScreenShare: (track: MediaStre
   return null
 }
 
-// ─── Sağ Sidebar — Online Kullanıcılar ───────────────────────────────────────
+// ─── Sağ Sidebar — Kullanıcı Paneli ──────────────────────────────────────────
 
 function UsersPanel({ users, speaking, currentUser, hostUsername }: {
   users: string[]
@@ -322,57 +414,100 @@ function UsersPanel({ users, speaking, currentUser, hostUsername }: {
   hostUsername: string
 }) {
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      <div className="px-4 py-3 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <p className="text-xs font-semibold uppercase" style={{ color: '#a1a1a1' }}>
-          Bu Odada — {users.length} kişi
+    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minHeight: 0 }}>
+      <div style={{
+        padding: '11px 14px',
+        borderBottom: '1px solid rgba(255,255,255,0.07)',
+        flexShrink: 0,
+      }}>
+        <p style={{
+          fontSize: 10,
+          fontWeight: 500,
+          letterSpacing: '0.08em',
+          color: '#444',
+          textTransform: 'uppercase',
+          margin: 0,
+        }}>
+          Bu Odada — {users.length}
         </p>
       </div>
-      <div className="flex-1 overflow-y-auto p-2">
+      <div style={{ flex: 1, overflowY: 'auto', padding: '6px 8px' }}>
         {users.length === 0 ? (
-          <p className="text-xs text-center mt-4" style={{ color: '#a1a1a1' }}>Kimse yok</p>
+          <p style={{ fontSize: 12, textAlign: 'center', marginTop: 16, color: '#444' }}>Kimse yok</p>
         ) : (
           users.map((user) => {
             const isSpeaking = speaking.has(user)
             const isMe = user === currentUser
             const isHost = user === hostUsername
             return (
-              <div key={user}
-                className="flex items-center gap-2.5 px-2 py-2 rounded-lg mb-0.5 transition-all duration-200"
-                style={{ backgroundColor: isSpeaking ? 'rgba(62,207,142,0.08)' : 'transparent' }}>
-                <div className="relative flex-shrink-0">
-                  <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-200"
-                    style={{ backgroundColor: getUserColor(user), color: '#0a0a0a', boxShadow: isSpeaking ? '0 0 0 2px #3ecf8e' : 'none' }}>
+              <div
+                key={user}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '5px 8px',
+                  borderRadius: 6,
+                  marginBottom: 2,
+                  backgroundColor: isSpeaking ? 'rgba(62,207,142,0.08)' : 'transparent',
+                  transition: 'background-color 150ms ease',
+                }}
+              >
+                <div style={{ position: 'relative', flexShrink: 0 }}>
+                  <div style={{
+                    width: 24, height: 24, borderRadius: '50%',
+                    backgroundColor: getUserColor(user),
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 10, color: '#080808', fontWeight: 600,
+                    boxShadow: isSpeaking ? '0 0 0 2px #3ecf8e' : 'none',
+                    transition: 'box-shadow 150ms ease',
+                  }}>
                     {user[0]?.toUpperCase()}
                   </div>
-                  {isSpeaking && (
-                    <div className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2"
-                      style={{ backgroundColor: '#3ecf8e', borderColor: '#111111', animation: 'pulse 1s infinite' }} />
-                  )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs truncate text-white">{user}</span>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <span style={{
+                      fontSize: 12,
+                      color: '#f0f0f0',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {user}
+                    </span>
                     {isMe && (
-                      <span className="text-xs px-1 rounded flex-shrink-0"
-                        style={{ backgroundColor: 'rgba(62,207,142,0.2)', color: '#3ecf8e', fontSize: '10px' }}>
+                      <span style={{
+                        fontSize: 10,
+                        padding: '1px 5px',
+                        borderRadius: 3,
+                        backgroundColor: 'rgba(62,207,142,0.12)',
+                        color: '#3ecf8e',
+                        flexShrink: 0,
+                      }}>
                         sen
                       </span>
                     )}
                     {isHost && (
-                      <span title="Müzik Hostu" className="flex-shrink-0" style={{ fontSize: '11px' }}>👑</span>
+                      <span style={{ color: '#f59e0b', flexShrink: 0, display: 'flex' }} title="Müzik Hostu">
+                        <IconCrown />
+                      </span>
                     )}
                   </div>
                   {isSpeaking && (
-                    <div className="flex items-end gap-0.5 mt-0.5 h-2.5">
+                    <div style={{ display: 'flex', alignItems: 'flex-end', gap: 2, marginTop: 3, height: 10 }}>
                       {[0, 0.15, 0.3].map((delay, i) => (
-                        <div key={i} className="w-0.5 rounded-full"
-                          style={{ backgroundColor: '#3ecf8e', height: '100%', animation: 'soundWave 0.5s ease-in-out infinite', animationDelay: `${delay}s` }} />
+                        <div key={i} style={{
+                          width: 2, borderRadius: 1,
+                          backgroundColor: '#3ecf8e',
+                          height: '100%',
+                          animation: 'soundWave 0.5s ease-in-out infinite',
+                          animationDelay: `${delay}s`,
+                        }} />
                       ))}
                     </div>
                   )}
                 </div>
-                {isSpeaking && <span className="text-xs flex-shrink-0">🎙️</span>}
               </div>
             )
           })
@@ -395,58 +530,113 @@ function MusicPlayerBar({ song, isPlaying, volume, isHost, onTogglePlay, onNext,
   onVolumeChange: (v: number) => void
 }) {
   return (
-    <div className="px-3 md:px-4 py-2 flex items-center gap-2 md:gap-3 flex-shrink-0"
-      style={{ backgroundColor: '#161616', borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-      <img src={song.thumbnail} alt={song.title}
-        className="rounded flex-shrink-0"
-        style={{ width: 32, height: 32, objectFit: 'cover' }} />
-      <div className="flex-1 min-w-0">
-        <div className="text-xs font-medium text-white truncate">{song.title}</div>
-        <div className="hidden sm:block text-xs truncate" style={{ color: '#555' }}>
-          {isHost ? `Ekleyen: ${song.added_by}` : `Ekleyen: ${song.added_by} · sadece host kontrolü`}
+    <div style={{
+      height: 52,
+      padding: '0 12px',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 10,
+      backgroundColor: '#161616',
+      borderBottom: '1px solid rgba(255,255,255,0.07)',
+      flexShrink: 0,
+    }}>
+      <img
+        src={song.thumbnail}
+        alt={song.title}
+        style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+      />
+      <div style={{ flex: 1, minWidth: 0 }}>
+        <div style={{
+          fontSize: 12,
+          fontWeight: 500,
+          color: '#f0f0f0',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}>
+          {song.title}
+        </div>
+        <div className="hidden sm:block" style={{
+          fontSize: 10,
+          color: '#444',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}>
+          {song.added_by}{!isHost ? ' · sadece host kontrolü' : ''}
         </div>
       </div>
-      <div className="flex items-center gap-0.5 flex-shrink-0">
+
+      <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
         <button
           onClick={isHost ? onPrev : undefined}
           title="Önceki"
-          className="w-7 h-7 rounded flex items-center justify-center transition-colors"
-          style={{ color: isHost ? '#a1a1a1' : '#333', cursor: isHost ? 'pointer' : 'default' }}
-          onMouseEnter={e => { if (isHost) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
-          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}>
+          style={{
+            width: 28, height: 28, borderRadius: 6,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: isHost ? '#888' : '#333',
+            cursor: isHost ? 'pointer' : 'default',
+            transition: 'background-color 150ms ease',
+          }}
+          onMouseEnter={(e) => { if (isHost) e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+        >
           <IconSkipBack />
         </button>
         <button
           onClick={isHost ? onTogglePlay : undefined}
           title={isPlaying ? 'Duraklat' : 'Oynat'}
-          className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
-          style={{ color: isHost ? '#ededed' : '#444', cursor: isHost ? 'pointer' : 'default' }}
-          onMouseEnter={e => { if (isHost) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
-          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}>
+          style={{
+            width: 32, height: 32, borderRadius: 6,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: isHost ? '#f0f0f0' : '#444',
+            cursor: isHost ? 'pointer' : 'default',
+            transition: 'background-color 150ms ease',
+          }}
+          onMouseEnter={(e) => { if (isHost) e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+        >
           {isPlaying ? <IconPause /> : <IconPlay />}
         </button>
         <button
           onClick={isHost ? onNext : undefined}
           title="Sonraki"
-          className="w-7 h-7 rounded flex items-center justify-center transition-colors"
-          style={{ color: isHost ? '#a1a1a1' : '#333', cursor: isHost ? 'pointer' : 'default' }}
-          onMouseEnter={e => { if (isHost) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.1)' }}
-          onMouseLeave={e => { e.currentTarget.style.backgroundColor = 'transparent' }}>
+          style={{
+            width: 28, height: 28, borderRadius: 6,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: isHost ? '#888' : '#333',
+            cursor: isHost ? 'pointer' : 'default',
+            transition: 'background-color 150ms ease',
+          }}
+          onMouseEnter={(e) => { if (isHost) e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+          onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+        >
           <IconSkipForward />
         </button>
       </div>
-      {/* Ses kontrolü — küçük ekranlarda gizle */}
-      <div className="hidden sm:flex items-center gap-1.5 flex-shrink-0" style={{ width: 90 }}>
-        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#555', flexShrink: 0 }}>
+
+      <div className="hidden sm:flex" style={{ alignItems: 'center', gap: 6, flexShrink: 0, width: 88 }}>
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ color: '#444', flexShrink: 0 }}>
           <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
         </svg>
-        <input type="range" min="0" max="100" value={volume}
+        <input
+          type="range" min="0" max="100" value={volume}
           onChange={(e) => onVolumeChange(Number(e.target.value))}
-          className="yt-volume-slider flex-1" style={{ cursor: 'pointer' }} />
+          className="yt-volume-slider"
+          style={{ flex: 1, cursor: 'pointer' }}
+        />
       </div>
-      <a href={`https://www.youtube.com/watch?v=${song.video_id}`} target="_blank" rel="noopener noreferrer"
-        title="YouTube'da aç" className="hidden sm:flex flex-shrink-0 opacity-50 hover:opacity-100 transition-opacity"
-        style={{ color: '#ff0000' }}>
+
+      <a
+        href={`https://www.youtube.com/watch?v=${song.video_id}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        title="YouTube'da aç"
+        className="hidden sm:flex"
+        style={{ flexShrink: 0, opacity: 0.4, color: '#ff0000', transition: 'opacity 150ms ease' }}
+        onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
+        onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.4' }}
+      >
         <IconYouTube />
       </a>
     </div>
@@ -463,60 +653,122 @@ function QueuePanel({ queue, queueInput, onInputChange, onAdd, onRemove }: {
   onRemove: (id: string) => void
 }) {
   return (
-    <div className="flex flex-col flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-      <div className="px-3 pt-3 pb-2 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <p className="text-xs font-semibold uppercase mb-2 flex items-center gap-1.5" style={{ color: '#a1a1a1' }}>
-          <span style={{ color: '#3ecf8e' }}><IconMusic /></span> Kuyruk
+    <div style={{ display: 'flex', flexDirection: 'column', flexShrink: 0, borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ padding: '11px 12px 10px', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+        <p style={{
+          fontSize: 10,
+          fontWeight: 500,
+          letterSpacing: '0.08em',
+          color: '#444',
+          textTransform: 'uppercase',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 6,
+          margin: '0 0 8px',
+        }}>
+          <span style={{ color: '#3ecf8e', display: 'flex' }}><IconMusic /></span>
+          Kuyruk
         </p>
-        <div className="flex gap-1">
+        <div style={{ display: 'flex', gap: 4 }}>
           <input
-            className="flex-1 min-w-0 text-xs outline-none px-2 py-1.5 rounded-lg"
-            style={{ backgroundColor: '#1a1a1a', color: '#ededed', border: '1px solid rgba(255,255,255,0.08)' }}
-            placeholder="YouTube linki yapıştır..."
+            style={{
+              flex: 1, minWidth: 0,
+              height: 32, fontSize: 12,
+              backgroundColor: '#161616',
+              border: '1px solid rgba(255,255,255,0.07)',
+              borderRadius: 6,
+              color: '#f0f0f0',
+              padding: '0 8px',
+              outline: 'none',
+              transition: 'border-color 150ms ease',
+            }}
+            placeholder="YouTube linki..."
             value={queueInput}
             onChange={(e) => onInputChange(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && onAdd()}
+            onFocus={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)' }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
           />
-          <button onClick={onAdd} disabled={!queueInput.trim()}
-            className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 text-sm font-bold transition-colors"
+          <button
+            onClick={onAdd}
+            disabled={!queueInput.trim()}
             style={{
-              backgroundColor: queueInput.trim() ? 'rgba(62,207,142,0.15)' : '#1a1a1a',
-              color: queueInput.trim() ? '#3ecf8e' : '#555',
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}>
+              width: 32, height: 32, borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+              fontSize: 18,
+              backgroundColor: queueInput.trim() ? 'rgba(62,207,142,0.12)' : '#161616',
+              color: queueInput.trim() ? '#3ecf8e' : '#444',
+              border: '1px solid rgba(255,255,255,0.07)',
+              cursor: queueInput.trim() ? 'pointer' : 'default',
+              transition: 'background-color 150ms ease, color 150ms ease',
+            }}
+          >
             +
           </button>
         </div>
       </div>
-      <div className="overflow-y-auto" style={{ maxHeight: 220 }}>
+      <div style={{ overflowY: 'auto', maxHeight: 220 }}>
         {queue.length === 0 ? (
-          <p className="text-xs text-center py-4" style={{ color: '#555' }}>Kuyruk boş</p>
+          <p style={{ fontSize: 11, textAlign: 'center', padding: '16px 0', color: '#444' }}>Kuyruk boş</p>
         ) : (
           queue.map((item, idx) => {
             const isActive = idx === 0
             return (
-              <div key={item.id}
-                className="flex items-center gap-2 px-2 py-1.5 group transition-colors"
+              <div
+                key={item.id}
                 style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  padding: '6px 10px',
                   backgroundColor: isActive ? 'rgba(62,207,142,0.06)' : 'transparent',
                   borderLeft: isActive ? '2px solid #3ecf8e' : '2px solid transparent',
-                }}>
-                <img src={item.thumbnail} alt={item.title}
-                  style={{ width: 36, height: 36, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }} />
-                <div className="flex-1 min-w-0">
-                  <div className="text-xs text-white truncate leading-tight">{item.title}</div>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <div className="w-3 h-3 rounded-full flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: getUserColor(item.added_by), fontSize: '7px', color: '#0a0a0a', fontWeight: 700 }}
-                      title={item.added_by}>
+                  transition: 'background-color 150ms ease',
+                }}
+              >
+                <img
+                  src={item.thumbnail}
+                  alt={item.title}
+                  style={{ width: 32, height: 32, objectFit: 'cover', borderRadius: 4, flexShrink: 0 }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{
+                    fontSize: 12,
+                    color: '#f0f0f0',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    lineHeight: 1.3,
+                  }}>
+                    {item.title}
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+                    <div style={{
+                      width: 12, height: 12, borderRadius: '50%',
+                      backgroundColor: getUserColor(item.added_by),
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 7, color: '#080808', fontWeight: 700, flexShrink: 0,
+                    }}>
                       {item.added_by[0]?.toUpperCase()}
                     </div>
-                    <span className="text-xs truncate" style={{ color: '#555', fontSize: '10px' }}>{item.added_by}</span>
+                    <span style={{ fontSize: 10, color: '#444', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {item.added_by}
+                    </span>
                   </div>
                 </div>
-                <button onClick={() => onRemove(item.id)}
-                  className="w-5 h-5 rounded flex items-center justify-center flex-shrink-0 text-base leading-none opacity-40 hover:opacity-100 transition-opacity"
-                  style={{ color: '#ef4444' }} title="Sil">
+                <button
+                  onClick={() => onRemove(item.id)}
+                  style={{
+                    width: 20, height: 20, borderRadius: 4,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+                    fontSize: 16, lineHeight: 1, color: '#f04444',
+                    opacity: 0.35,
+                    transition: 'opacity 150ms ease',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.opacity = '1' }}
+                  onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.35' }}
+                  title="Sil"
+                >
                   ×
                 </button>
               </div>
@@ -541,7 +793,6 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
   // Chat state
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
-  // SSR: '' (server snapshot) → hydration uyumu; client: gerçek localStorage değeri
   const username = useSyncExternalStore(
     () => () => {},
     () => localStorage.getItem('username') || '',
@@ -627,7 +878,7 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
     setSidebarOpen(false)
   }
 
-  // ── Auth — giriş yapılmamışsa ana sayfaya yönlendir ─────────────────────
+  // ── Auth ─────────────────────────────────────────────────────────────────
 
   useEffect(() => {
     if (!localStorage.getItem('username')) router.push('/')
@@ -834,7 +1085,6 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
                     .is('started_at', null)
                     .then()
                 }
-                // music_state'i bir sonraki şarkı bilgisiyle güncelle
                 supabase.from('music_state').upsert({
                   room_id: voiceRoom,
                   current_video_id: rest[0]?.video_id ?? null,
@@ -880,7 +1130,6 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
       if (queueData) {
         setQueue(queueData as QueueItem[])
         queueRef.current = queueData as QueueItem[]
-        // queue started_at yoksa music_state.started_at'i fallback olarak kullan
         const queueStartedAt = queueData[0]?.started_at ?? null
         startedAtRef.current = queueStartedAt ?? musicState?.started_at ?? null
       }
@@ -904,7 +1153,6 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
       isHostRef.current = becomeHost
       setIsHost(becomeHost)
 
-      // voice_presence kaydı ekle
       await supabase.from('voice_presence').upsert(
         { room_id: targetRoom, username, joined_at: new Date().toISOString() },
         { onConflict: 'room_id,username' }
@@ -920,7 +1168,6 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
   }
 
   const leaveVoice = async () => {
-    // voice_presence kaydını sil
     if (voiceRoom && username) {
       await supabase.from('voice_presence')
         .delete()
@@ -988,7 +1235,6 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
       alert('Video bilgisi alınamadı. Bağlantınızı kontrol edin.')
       return
     }
-    // İlk şarkıysa started_at'i hemen set et ve music_state'i güncelle
     const isFirstSong = queueRef.current.length === 0
     const firstStartedAt = isFirstSong ? new Date().toISOString() : undefined
 
@@ -1066,18 +1312,18 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
   const mergedUsers = [...new Set([...onlineUsers, ...voiceParticipants])]
 
   return (
-    <div className="flex h-screen overflow-hidden" style={{ backgroundColor: '#0a0a0a', color: '#ededed' }}>
+    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#080808', color: '#f0f0f0' }}>
 
-      {/* Gizli YouTube player container */}
+      {/* Gizli YouTube player */}
       <div id="yt-player-container" style={{ position: 'fixed', top: -9999, left: -9999, width: 1, height: 1, overflow: 'hidden' }}>
         <div id="yt-player" />
       </div>
 
-      {/* Mobil overlay — sidebar açıkken arka planı karart */}
+      {/* Mobil overlay */}
       {sidebarOpen && (
         <div
           className="fixed inset-0 z-40 md:hidden"
-          style={{ backgroundColor: 'rgba(0,0,0,0.6)' }}
+          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
           onClick={() => setSidebarOpen(false)}
         />
       )}
@@ -1086,34 +1332,77 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
       <div
         className={`
           fixed md:relative z-50 md:z-auto
-          w-60 h-full flex flex-col flex-shrink-0
-          transition-transform duration-300 ease-in-out
+          h-full flex flex-col flex-shrink-0
+          transition-transform duration-200 ease-in-out
           ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
-        style={{ backgroundColor: '#111111', borderRight: '1px solid rgba(255,255,255,0.08)' }}
+        style={{
+          width: 224,
+          backgroundColor: '#0f0f0f',
+          borderRight: '1px solid rgba(255,255,255,0.07)',
+        }}
       >
-        <div className="px-4 py-4 flex-shrink-0" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-          <h1 className="font-bold text-white text-base flex items-center gap-2">
-            <span style={{ color: '#3ecf8e' }}><IconMusic /></span>
-            Harmonix
-          </h1>
+        {/* Logo */}
+        <div style={{
+          height: 48,
+          display: 'flex',
+          alignItems: 'center',
+          padding: '0 16px',
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          flexShrink: 0,
+        }}>
+          <span style={{ fontSize: 15, fontWeight: 500, color: '#f0f0f0' }}>Harmonix</span>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-2 py-3 flex flex-col gap-4">
+        {/* Kanal listesi */}
+        <div style={{
+          flex: 1,
+          overflowY: 'auto',
+          padding: '12px 8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+        }}>
 
           {/* Metin kanalları */}
           <div>
-            <p className="text-xs font-semibold uppercase px-2 mb-1" style={{ color: '#a1a1a1' }}>Kanallar</p>
+            <p style={{
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: '0.08em',
+              color: '#444',
+              textTransform: 'uppercase',
+              padding: '0 10px',
+              marginBottom: 4,
+            }}>
+              Kanallar
+            </p>
             {ROOMS.map((r) => (
-              <button key={r.id} onClick={() => switchTextRoom(r.id)}
-                className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm transition-all duration-200"
+              <button
+                key={r.id}
+                onClick={() => switchTextRoom(r.id)}
                 style={{
-                  backgroundColor: r.id === textRoom ? 'rgba(62,207,142,0.1)' : 'transparent',
-                  color: r.id === textRoom ? '#3ecf8e' : '#a1a1a1',
+                  width: '100%',
+                  textAlign: 'left',
+                  height: 32,
+                  padding: '0 10px',
+                  borderRadius: 6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  fontSize: 13,
+                  color: r.id === textRoom ? '#3ecf8e' : '#888',
+                  backgroundColor: r.id === textRoom ? 'rgba(62,207,142,0.12)' : 'transparent',
+                  transition: 'background-color 150ms ease',
+                  cursor: 'pointer',
+                  marginBottom: 1,
                 }}
-                onMouseEnter={(e) => { if (r.id !== textRoom) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)' }}
-                onMouseLeave={(e) => { if (r.id !== textRoom) e.currentTarget.style.backgroundColor = 'transparent' }}>
-                <span style={{ color: r.id === textRoom ? '#3ecf8e' : '#555' }}><IconHash /></span>
+                onMouseEnter={(e) => { if (r.id !== textRoom) e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+                onMouseLeave={(e) => { if (r.id !== textRoom) e.currentTarget.style.backgroundColor = 'transparent' }}
+              >
+                <span style={{ color: r.id === textRoom ? '#3ecf8e' : '#444', display: 'flex', flexShrink: 0 }}>
+                  <IconHash />
+                </span>
                 <span>{r.name}</span>
               </button>
             ))}
@@ -1121,59 +1410,114 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
 
           {/* Ses kanalları */}
           <div>
-            <p className="text-xs font-semibold uppercase px-2 mb-1" style={{ color: '#a1a1a1' }}>Ses</p>
+            <p style={{
+              fontSize: 10,
+              fontWeight: 500,
+              letterSpacing: '0.08em',
+              color: '#444',
+              textTransform: 'uppercase',
+              padding: '0 10px',
+              marginBottom: 4,
+            }}>
+              Ses
+            </p>
             {ROOMS.map((r) => {
               const isActiveVoice = voiceRoom === r.id && isInVoice
               return (
-                <div key={r.id}>
+                <div key={r.id} style={{ marginBottom: 2 }}>
                   <button
                     onClick={() => joinVoice(r.id)}
-                    className="w-full text-left px-3 py-2 rounded-lg flex items-center gap-2 text-sm transition-all duration-200"
                     style={{
-                      backgroundColor: isActiveVoice ? 'rgba(62,207,142,0.1)' : 'transparent',
-                      color: isActiveVoice ? '#3ecf8e' : '#a1a1a1',
+                      width: '100%',
+                      textAlign: 'left',
+                      height: 32,
+                      padding: '0 14px',
+                      borderRadius: 6,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 8,
+                      fontSize: 12,
+                      color: isActiveVoice ? '#3ecf8e' : '#888',
+                      backgroundColor: isActiveVoice ? 'rgba(62,207,142,0.12)' : 'transparent',
+                      transition: 'background-color 150ms ease',
+                      cursor: 'pointer',
                     }}
-                    onMouseEnter={(e) => { if (!isActiveVoice) e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)' }}
-                    onMouseLeave={(e) => { if (!isActiveVoice) e.currentTarget.style.backgroundColor = 'transparent' }}>
-                    <span style={{ color: isActiveVoice ? '#3ecf8e' : '#555' }}><IconVolume /></span>
+                    onMouseEnter={(e) => { if (!isActiveVoice) e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+                    onMouseLeave={(e) => { if (!isActiveVoice) e.currentTarget.style.backgroundColor = 'transparent' }}
+                  >
+                    <span style={{ color: isActiveVoice ? '#3ecf8e' : '#444', display: 'flex', flexShrink: 0 }}>
+                      <IconVolume />
+                    </span>
                     <span>{r.name}</span>
                     {isActiveVoice && (
-                      <div className="ml-auto flex gap-0.5 items-end h-2.5">
+                      <div style={{ marginLeft: 'auto', display: 'flex', gap: 2, alignItems: 'flex-end', height: 10 }}>
                         {[0, 0.2, 0.4].map((d, i) => (
-                          <div key={i} className="w-0.5 rounded-full"
-                            style={{ backgroundColor: '#3ecf8e', height: '100%', animation: 'soundWave 0.6s ease-in-out infinite', animationDelay: `${d}s` }} />
+                          <div key={i} style={{
+                            width: 2, borderRadius: 1,
+                            backgroundColor: '#3ecf8e',
+                            height: '100%',
+                            animation: 'soundWave 0.6s ease-in-out infinite',
+                            animationDelay: `${d}s`,
+                          }} />
                         ))}
                       </div>
                     )}
                   </button>
 
                   {isActiveVoice && voiceParticipants.length > 0 && (
-                    <div className="ml-4 mt-0.5 flex flex-col gap-0.5">
+                    <div style={{ paddingLeft: 24, marginTop: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                       {voiceParticipants.map((user) => {
                         const isSpeaking = speaking.has(user)
                         const isMe = user === username
                         const isVoiceHost = user === hostUsername
                         return (
-                          <div key={user}
-                            className="flex items-center gap-2 px-2 py-1 rounded-lg transition-all duration-200"
-                            style={{ backgroundColor: isSpeaking ? 'rgba(62,207,142,0.08)' : 'transparent' }}>
-                            <div className="relative flex-shrink-0">
-                              <div className="w-5 h-5 rounded-full flex items-center justify-center font-bold"
-                                style={{ backgroundColor: getUserColor(user), color: '#0a0a0a', fontSize: '10px', boxShadow: isSpeaking ? '0 0 0 2px #3ecf8e' : 'none' }}>
-                                {user[0]?.toUpperCase()}
-                              </div>
-                              <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full border"
-                                style={{ backgroundColor: '#3ecf8e', borderColor: '#111111' }} />
+                          <div
+                            key={user}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 6,
+                              padding: '2px 8px',
+                              borderRadius: 6,
+                              backgroundColor: isSpeaking ? 'rgba(62,207,142,0.08)' : 'transparent',
+                              transition: 'background-color 150ms ease',
+                            }}
+                          >
+                            <div style={{
+                              width: 18, height: 18, borderRadius: '50%',
+                              backgroundColor: getUserColor(user),
+                              display: 'flex', alignItems: 'center', justifyContent: 'center',
+                              fontSize: 8, color: '#080808', fontWeight: 600, flexShrink: 0,
+                              boxShadow: isSpeaking ? '0 0 0 2px #3ecf8e' : 'none',
+                              transition: 'box-shadow 150ms ease',
+                            }}>
+                              {user[0]?.toUpperCase()}
                             </div>
-                            <span className="text-xs truncate flex-1" style={{ color: isSpeaking ? '#ededed' : '#a1a1a1' }}>
+                            <span style={{
+                              fontSize: 11,
+                              color: isSpeaking ? '#f0f0f0' : '#888',
+                              overflow: 'hidden',
+                              textOverflow: 'ellipsis',
+                              whiteSpace: 'nowrap',
+                              flex: 1,
+                            }}>
                               {user}{isMe ? ' (sen)' : ''}
                             </span>
-                            {isVoiceHost && <span title="Müzik Hostu" style={{ fontSize: '10px' }}>👑</span>}
+                            {isVoiceHost && (
+                              <span style={{ color: '#f59e0b', flexShrink: 0, display: 'flex' }} title="Müzik Hostu">
+                                <IconCrown />
+                              </span>
+                            )}
                             {isSpeaking && (
-                              <div className="flex gap-0.5 items-end h-2.5 flex-shrink-0">
+                              <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 10, flexShrink: 0 }}>
                                 {[0, 0.15, 0.3].map((d, i) => (
-                                  <div key={i} className="w-0.5 rounded-full"
-                                    style={{ backgroundColor: '#3ecf8e', height: '100%', animation: 'soundWave 0.5s ease-in-out infinite', animationDelay: `${d}s` }} />
+                                  <div key={i} style={{
+                                    width: 2, borderRadius: 1,
+                                    backgroundColor: '#3ecf8e',
+                                    height: '100%',
+                                    animation: 'soundWave 0.5s ease-in-out infinite',
+                                    animationDelay: `${d}s`,
+                                  }} />
                                 ))}
                               </div>
                             )}
@@ -1188,13 +1532,15 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
           </div>
         </div>
 
+        {/* LiveKit ses bağlantısı */}
         {isInVoice && liveKitToken && (
-          <LiveKitRoom 
-          audio={true} 
-          token={liveKitToken} 
-          serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL} 
-          connect={true} 
-          style={{ display: 'contents' }} >
+          <LiveKitRoom
+            audio={true}
+            token={liveKitToken}
+            serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+            connect={true}
+            style={{ display: 'contents' }}
+          >
             <RoomAudioRenderer />
             <SpeakerListener onSpeakersChange={setSpeaking} />
             <VoiceParticipantListener onParticipantsChange={setVoiceParticipants} />
@@ -1203,51 +1549,124 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
           </LiveKitRoom>
         )}
 
-        <div className="px-3 py-3 flex items-center justify-between flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0"
-              style={{ backgroundColor: getUserColor(username), color: '#0a0a0a' }}>
+        {/* Kullanıcı alanı */}
+        <div style={{
+          height: 52,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 12px',
+          borderTop: '1px solid rgba(255,255,255,0.07)',
+          flexShrink: 0,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+            <div style={{
+              width: 24, height: 24, borderRadius: '50%',
+              backgroundColor: getUserColor(username),
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: 10, color: '#080808', fontWeight: 600, flexShrink: 0,
+            }}>
               {username[0]?.toUpperCase()}
             </div>
-            <span className="text-sm truncate text-white">{username}</span>
-            {isHost && <span title="Müzik Hostu" style={{ fontSize: '12px', flexShrink: 0 }}>👑</span>}
+            <span style={{ fontSize: 13, color: '#f0f0f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {username}
+            </span>
+            {isHost && (
+              <span style={{ color: '#f59e0b', flexShrink: 0, display: 'flex' }} title="Müzik Hostu">
+                <IconCrown />
+              </span>
+            )}
           </div>
-          <button onClick={() => { localStorage.removeItem('username'); router.push('/') }}
-            className="text-xs px-2 py-1 rounded transition-all duration-200 hover:bg-white/10"
-            style={{ color: '#a1a1a1' }}>↪</button>
+          <button
+            onClick={() => { localStorage.removeItem('username'); router.push('/') }}
+            style={{
+              width: 28, height: 28, borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#888',
+              transition: 'background-color 150ms ease',
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+            title="Çıkış"
+          >
+            <IconLogOut />
+          </button>
         </div>
       </div>
 
       {/* ── Orta — Chat ──────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0 }}>
 
         {/* Header */}
-        <div className="px-4 md:px-5 py-3.5 flex items-center gap-2 md:gap-3 flex-shrink-0"
-          style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-
-          {/* Hamburger — sadece mobilde */}
+        <div style={{
+          height: 48,
+          padding: '0 16px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          borderBottom: '1px solid rgba(255,255,255,0.07)',
+          flexShrink: 0,
+        }}>
           <button
-            className="md:hidden w-8 h-8 flex items-center justify-center rounded-lg transition-colors flex-shrink-0"
-            style={{ color: '#a1a1a1' }}
-            onClick={() => setSidebarOpen(true)}>
+            className="md:hidden"
+            style={{
+              width: 32, height: 32, borderRadius: 6,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              color: '#888',
+              transition: 'background-color 150ms ease',
+              flexShrink: 0,
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+            onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
+            onClick={() => setSidebarOpen(true)}
+          >
             <IconHamburger />
           </button>
 
-          <span style={{ color: '#555' }}><IconHash /></span>
-          <h2 className="font-semibold text-white text-sm">{textRoomName}</h2>
+          <span style={{ color: '#444', display: 'flex', flexShrink: 0 }}><IconHash /></span>
+          <h2 style={{ fontSize: 14, fontWeight: 500, color: '#f0f0f0', margin: 0 }}>{textRoomName}</h2>
+
           {isInVoice && (
-            <span className="hidden sm:flex ml-1 text-xs px-2 py-0.5 rounded-full items-center gap-1"
-              style={{ backgroundColor: 'rgba(62,207,142,0.12)', color: '#3ecf8e' }}>
-              <IconVolume /> {ROOMS.find(r => r.id === voiceRoom)?.name} sesinde
+            <span
+              className="hidden sm:flex"
+              style={{
+                marginLeft: 4,
+                fontSize: 11,
+                padding: '2px 8px',
+                borderRadius: 20,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: 'rgba(62,207,142,0.12)',
+                color: '#3ecf8e',
+              }}
+            >
+              <IconVolume />
+              {ROOMS.find(r => r.id === voiceRoom)?.name}
             </span>
           )}
+
           {isInVoice && isHost && (
-            <span className="hidden sm:inline text-xs px-2 py-0.5 rounded-full"
-              style={{ backgroundColor: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}>
-              👑 Host
+            <span
+              className="hidden sm:flex"
+              style={{
+                fontSize: 11,
+                padding: '2px 8px',
+                borderRadius: 20,
+                alignItems: 'center',
+                gap: 4,
+                backgroundColor: 'rgba(245,158,11,0.12)',
+                color: '#f59e0b',
+              }}
+            >
+              <IconCrown /> Host
             </span>
           )}
-          <span className="ml-auto text-xs flex-shrink-0" style={{ color: '#a1a1a1' }}>{onlineUsers.length} çevrimiçi</span>
+
+          <span style={{ marginLeft: 'auto', fontSize: 12, color: '#444', flexShrink: 0 }}>
+            {onlineUsers.length} çevrimiçi
+          </span>
         </div>
 
         {/* Müzik çalar barı */}
@@ -1264,15 +1683,21 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
           />
         )}
 
-        {/* Ekran paylaşımı görüntüleyici */}
+        {/* Ekran paylaşımı */}
         {isInVoice && screenTrack && (
           <div
             ref={screenContainerRef}
-            className="relative flex-shrink-0 mx-2 md:mx-4 mt-2 md:mt-3 rounded-xl overflow-hidden group cursor-pointer"
             style={{
+              position: 'relative',
+              flexShrink: 0,
+              margin: '12px 16px 0',
+              borderRadius: 8,
+              overflow: 'hidden',
               backgroundColor: '#000',
-              border: '1px solid rgba(255,255,255,0.1)',
+              border: '1px solid rgba(255,255,255,0.07)',
+              cursor: 'pointer',
             }}
+            className="group"
             onDoubleClick={toggleFullscreen}
           >
             <video
@@ -1280,39 +1705,59 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
               autoPlay
               playsInline
               muted
-              className="w-full block object-contain"
-              style={{ maxHeight: isFullscreen ? '100vh' : 'min(280px, 40vw)' }}
+              style={{ width: '100%', display: 'block', objectFit: 'contain', maxHeight: isFullscreen ? '100vh' : 'min(280px, 40vw)' }}
             />
 
-            {/* Sol üst — etiket */}
-            <div className="absolute top-2 left-2 text-xs px-2 py-1 rounded-full flex items-center gap-1.5"
-              style={{ backgroundColor: 'rgba(0,0,0,0.65)', color: '#ededed', backdropFilter: 'blur(4px)' }}>
-              🖥️ Ekran Paylaşımı
+            <div style={{
+              position: 'absolute', top: 8, left: 8,
+              fontSize: 11, padding: '3px 8px', borderRadius: 20,
+              display: 'flex', alignItems: 'center', gap: 5,
+              backgroundColor: 'rgba(0,0,0,0.65)',
+              color: '#f0f0f0',
+              backdropFilter: 'blur(4px)',
+            }}>
+              <IconMonitor /> Ekran Paylaşımı
             </div>
 
-            {/* Sağ üst — tam ekran butonu (hover'da görünür) */}
-            <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+            <div style={{ position: 'absolute', top: 8, right: 8 }} className="opacity-0 group-hover:opacity-100 transition-opacity duration-150">
               <button
                 onClick={(e) => { e.stopPropagation(); toggleFullscreen() }}
-                className="w-7 h-7 rounded-lg flex items-center justify-center transition-colors hover:bg-white/20"
-                style={{ backgroundColor: 'rgba(0,0,0,0.65)', color: '#ededed', backdropFilter: 'blur(4px)' }}
-                title={isFullscreen ? 'Küçült' : 'Tam Ekran'}>
+                style={{
+                  width: 28, height: 28, borderRadius: 6,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  backgroundColor: 'rgba(0,0,0,0.65)',
+                  color: '#f0f0f0',
+                  backdropFilter: 'blur(4px)',
+                  transition: 'background-color 150ms ease',
+                  cursor: 'pointer',
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.15)' }}
+                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'rgba(0,0,0,0.65)' }}
+                title={isFullscreen ? 'Küçült' : 'Tam Ekran'}
+              >
                 {isFullscreen ? <IconExitFullscreen /> : <IconFullscreen />}
               </button>
             </div>
 
-            {/* Alt orta — ipucu (hover'da görünür, fullscreen değilken) */}
             {!isFullscreen && (
-              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-70 transition-opacity whitespace-nowrap"
-                style={{ backgroundColor: 'rgba(0,0,0,0.6)', color: '#ededed' }}>
+              <div
+                style={{
+                  position: 'absolute', bottom: 8, left: '50%', transform: 'translateX(-50%)',
+                  fontSize: 11, padding: '2px 10px', borderRadius: 20, whiteSpace: 'nowrap',
+                  backgroundColor: 'rgba(0,0,0,0.6)', color: '#f0f0f0',
+                }}
+                className="opacity-0 group-hover:opacity-60 transition-opacity duration-150"
+              >
                 Çift tıkla → tam ekran
               </div>
             )}
 
-            {/* Tam ekranda ESC ipucu */}
             {isFullscreen && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-xs px-3 py-1 rounded-full"
-                style={{ backgroundColor: 'rgba(0,0,0,0.6)', color: '#ededed' }}>
+              <div style={{
+                position: 'absolute', bottom: 16, left: '50%', transform: 'translateX(-50%)',
+                fontSize: 11, padding: '3px 12px', borderRadius: 20,
+                backgroundColor: 'rgba(0,0,0,0.6)', color: '#f0f0f0',
+              }}>
                 ESC veya çift tıkla → küçült
               </div>
             )}
@@ -1320,10 +1765,10 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
         )}
 
         {/* Mesajlar */}
-        <div className="flex-1 overflow-y-auto px-4 md:px-5 py-4 flex flex-col gap-1">
+        <div style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
           {messages.length === 0 && (
-            <p className="text-center text-sm mt-8" style={{ color: '#a1a1a1' }}>
-              Henüz mesaj yok. İlk mesajı sen at! 💬
+            <p style={{ textAlign: 'center', fontSize: 13, marginTop: 32, color: '#444' }}>
+              Henüz mesaj yok. İlk mesajı sen at.
             </p>
           )}
           {messages.map((msg, i) => {
@@ -1331,20 +1776,39 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
             const prevMsg = messages[i - 1]
             const showHeader = !prevMsg || prevMsg.username !== msg.username
             return (
-              <div key={msg.id} className={`flex ${isOwn ? 'justify-end' : 'justify-start'} ${showHeader && i > 0 ? 'mt-3' : ''}`}>
-                <div className={`flex flex-col ${isOwn ? 'items-end' : 'items-start'} max-w-xs sm:max-w-sm`}>
+              <div
+                key={msg.id}
+                style={{
+                  display: 'flex',
+                  justifyContent: isOwn ? 'flex-end' : 'flex-start',
+                  marginTop: showHeader && i > 0 ? 12 : 0,
+                }}
+              >
+                <div style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: isOwn ? 'flex-end' : 'flex-start',
+                  maxWidth: 'min(320px, 85vw)',
+                }}>
                   {showHeader && (
-                    <div className="flex items-center gap-2 mb-1 px-1">
-                      <span className="text-xs font-medium" style={{ color: getUserColor(msg.username) }}>{msg.username}</span>
-                      <span className="text-xs" style={{ color: '#555', fontSize: '10px' }}>{formatTime(msg.created_at)}</span>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, padding: '0 4px' }}>
+                      <span style={{ fontSize: 11, fontWeight: 500, color: getUserColor(msg.username) }}>
+                        {msg.username}
+                      </span>
+                      <span style={{ fontSize: 10, color: '#444' }}>
+                        {formatTime(msg.created_at)}
+                      </span>
                     </div>
                   )}
-                  <div className="px-3.5 py-2 rounded-xl text-sm leading-relaxed"
-                    style={{
-                      backgroundColor: isOwn ? '#3ecf8e' : '#1a1a1a',
-                      color: isOwn ? '#0a0a0a' : '#ededed',
-                      border: isOwn ? 'none' : '1px solid rgba(255,255,255,0.06)',
-                    }}>
+                  <div style={{
+                    padding: '7px 12px',
+                    fontSize: 13,
+                    lineHeight: 1.5,
+                    backgroundColor: isOwn ? '#3ecf8e' : '#161616',
+                    color: isOwn ? '#080808' : '#f0f0f0',
+                    borderRadius: isOwn ? '10px 10px 2px 10px' : '10px 10px 10px 2px',
+                    border: isOwn ? 'none' : '1px solid rgba(255,255,255,0.07)',
+                  }}>
                     {msg.content}
                   </div>
                 </div>
@@ -1355,28 +1819,82 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
         </div>
 
         {/* Input */}
-        <div className="px-3 md:px-4 py-3 flex-shrink-0" style={{ borderTop: '1px solid rgba(255,255,255,0.08)' }}>
-          <div className="flex items-center gap-2 px-3 py-2 rounded-xl"
-            style={{ backgroundColor: '#1a1a1a', border: '1px solid rgba(255,255,255,0.08)' }}>
-            <input className="flex-1 bg-transparent text-white text-sm outline-none" style={{ color: '#ededed' }}
+        <div style={{ padding: '8px 12px 12px', flexShrink: 0 }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 8,
+            height: 40,
+            padding: '0 12px',
+            borderRadius: 8,
+            backgroundColor: '#161616',
+            border: '1px solid rgba(255,255,255,0.07)',
+            transition: 'border-color 150ms ease',
+          }}>
+            <input
+              style={{
+                flex: 1,
+                background: 'transparent',
+                color: '#f0f0f0',
+                fontSize: 13,
+                outline: 'none',
+                border: 'none',
+              }}
               placeholder={`#${textRoomName} kanalına mesaj gönder`}
-              value={input} onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && sendMessage()} />
-            <button onClick={sendMessage} className="text-sm transition-all duration-200 hover:opacity-80 px-1"
-              style={{ color: input.trim() ? '#3ecf8e' : '#555' }}>
-              ➤
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+              onFocus={(e) => {
+                const parent = e.currentTarget.parentElement
+                if (parent) parent.style.borderColor = 'rgba(255,255,255,0.12)'
+              }}
+              onBlur={(e) => {
+                const parent = e.currentTarget.parentElement
+                if (parent) parent.style.borderColor = 'rgba(255,255,255,0.07)'
+              }}
+            />
+            <button
+              onClick={sendMessage}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                color: input.trim() ? '#3ecf8e' : '#444',
+                transition: 'color 150ms ease',
+                cursor: input.trim() ? 'pointer' : 'default',
+                flexShrink: 0,
+              }}
+            >
+              <IconSend />
             </button>
           </div>
         </div>
       </div>
 
-      {/* ── Sağ Sidebar — lg altında gizli ──────────────────────────────── */}
-      <div className="hidden lg:flex w-64 flex-col flex-shrink-0"
-        style={{ backgroundColor: '#111111', borderLeft: '1px solid rgba(255,255,255,0.08)' }}>
+      {/* ── Sağ Sidebar ──────────────────────────────────────────────────── */}
+      <div
+        className="hidden lg:flex"
+        style={{
+          width: 240,
+          flexDirection: 'column',
+          flexShrink: 0,
+          backgroundColor: '#0f0f0f',
+          borderLeft: '1px solid rgba(255,255,255,0.07)',
+        }}
+      >
         {isInVoice && (
-          <QueuePanel queue={queue} queueInput={queueInput} onInputChange={setQueueInput} onAdd={addToQueue} onRemove={removeFromQueue} />
+          <QueuePanel
+            queue={queue}
+            queueInput={queueInput}
+            onInputChange={setQueueInput}
+            onAdd={addToQueue}
+            onRemove={removeFromQueue}
+          />
         )}
-        <UsersPanel users={mergedUsers} speaking={speaking} currentUser={username} hostUsername={hostUsername} />
+        <UsersPanel
+          users={mergedUsers}
+          speaking={speaking}
+          currentUser={username}
+          hostUsername={hostUsername}
+        />
       </div>
 
       <style>{`
@@ -1389,20 +1907,20 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
           appearance: none;
           height: 3px;
           border-radius: 2px;
-          background: rgba(255,255,255,0.15);
+          background: rgba(255,255,255,0.1);
           outline: none;
         }
         .yt-volume-slider::-webkit-slider-thumb {
           -webkit-appearance: none;
-          width: 10px;
-          height: 10px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
           background: #3ecf8e;
           cursor: pointer;
         }
         .yt-volume-slider::-moz-range-thumb {
-          width: 10px;
-          height: 10px;
+          width: 8px;
+          height: 8px;
           border-radius: 50%;
           background: #3ecf8e;
           cursor: pointer;
