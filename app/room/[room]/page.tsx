@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { use } from 'react'
 import {
   LiveKitRoom,
+  RoomAudioRenderer,
   useRoomContext,
   useLocalParticipant,
   useParticipants,
@@ -218,6 +219,11 @@ function VoiceControls({ onLeave }: { onLeave: () => void }) {
   const [muted, setMuted] = useState(false)
   const [camera, setCamera] = useState(false)
   const [screen, setScreen] = useState(false)
+
+  useEffect(() => {
+    if (!localParticipant) return
+    localParticipant.setMicrophoneEnabled(true)
+  }, [localParticipant])
 
   const toggleMic = async () => { await localParticipant.setMicrophoneEnabled(muted); setMuted(!muted) }
   const toggleCamera = async () => { await localParticipant.setCameraEnabled(!camera); setCamera(!camera) }
@@ -1183,7 +1189,13 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
         </div>
 
         {isInVoice && liveKitToken && (
-          <LiveKitRoom audio={true} token={liveKitToken} serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL} connect={true} style={{ display: 'contents' }}>
+          <LiveKitRoom 
+          audio={true} 
+          token={liveKitToken} 
+          serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL} 
+          connect={true} 
+          style={{ display: 'contents' }} >
+            <RoomAudioRenderer />
             <SpeakerListener onSpeakersChange={setSpeaking} />
             <VoiceParticipantListener onParticipantsChange={setVoiceParticipants} />
             <ScreenShareViewer onScreenShare={setScreenTrack} />
