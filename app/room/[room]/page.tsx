@@ -99,8 +99,11 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
     volume,
     queueInput,
     setQueueInput,
+    isAddingPlaylist,
     currentSong,
     addToQueue,
+    addPlaylistToQueue,
+    clearQueue,
     removeFromQueue,
     handleNext,
     togglePlay,
@@ -652,7 +655,10 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
             queueInput={queueInput}
             onInputChange={setQueueInput}
             onAdd={addToQueue}
+            onAddPlaylist={addPlaylistToQueue}
             onRemove={removeFromQueue}
+            onClearQueue={clearQueue}
+            isAddingPlaylist={isAddingPlaylist}
           />
         )}
         <UsersPanel

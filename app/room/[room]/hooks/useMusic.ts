@@ -15,6 +15,7 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
   const [isPlaying, setIsPlaying] = useState(false)
   const [volume, setVolume] = useState(80)
   const [queueInput, setQueueInput] = useState('')
+  const [isAddingPlaylist, setIsAddingPlaylist] = useState(false)
   const [ytReady, setYtReady] = useState(() =>
     typeof window !== 'undefined' && !!(window.YT && window.YT.Player)
   )
@@ -245,6 +246,90 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     refetchQueue()
   }
 
+  const addPlaylistToQueue = async () => {
+    if (!voiceRoom) return
+    const url = queueInput.trim()
+    if (!url) return
+
+    setIsAddingPlaylist(true)
+    const toastId = toast.loading('Çalma listesi yükleniyor...')
+
+    try {
+      const res = await fetch(`/api/playlist?url=${encodeURIComponent(url)}`)
+      const body = await res.json()
+
+      if (!res.ok) {
+        toast.error(body.error ?? 'Çalma listesi alınamadı', { id: toastId })
+        return
+      }
+
+      const { items, title } = body as { items: { videoId: string; title: string; thumbnail: string }[]; title: string }
+
+      if (!items?.length) {
+        toast.error('Çalma listesinde video bulunamadı', { id: toastId })
+        return
+      }
+
+      toast.loading(`${items.length} şarkı ekleniyor...`, { id: toastId })
+
+      const isFirstSong = queueRef.current.length === 0
+      const firstStartedAt = isFirstSong ? new Date().toISOString() : undefined
+      const baseTime = Date.now()
+
+      const insertData = items.map((item, idx) => ({
+        room_id: voiceRoom,
+        video_id: item.videoId,
+        title: item.title,
+        thumbnail: item.thumbnail,
+        added_by: username,
+        added_at: new Date(baseTime + idx * 10).toISOString(),
+        ...(isFirstSong && idx === 0 && firstStartedAt ? { started_at: firstStartedAt } : {}),
+      }))
+
+      const BATCH = 50
+      for (let i = 0; i < insertData.length; i += BATCH) {
+        const { error } = await supabase.from('queue').insert(insertData.slice(i, i + BATCH))
+        if (error) {
+          toast.error('Bazı şarkılar eklenemedi: ' + error.message, { id: toastId })
+          return
+        }
+      }
+
+      if (isFirstSong && firstStartedAt) {
+        startedAtRef.current = firstStartedAt
+        await supabase.from('music_state').upsert({
+          room_id: voiceRoom,
+          current_video_id: items[0].videoId,
+          started_at: firstStartedAt,
+          is_playing: true,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: 'room_id' })
+      }
+
+      toast.success(`"${title}" — ${items.length} şarkı eklendi`, { id: toastId })
+      setQueueInput('')
+      refetchQueue()
+    } catch {
+      toast.error('Bir hata oluştu', { id: toastId })
+    } finally {
+      setIsAddingPlaylist(false)
+    }
+  }
+
+  const clearQueue = async () => {
+    if (!voiceRoom) return
+    const { error } = await supabase.from('queue').delete().eq('room_id', voiceRoom)
+    if (error) { toast.error('Kuyruk temizlenemedi: ' + error.message); return }
+    await supabase.from('music_state').upsert({
+      room_id: voiceRoom,
+      current_video_id: null,
+      started_at: null,
+      is_playing: false,
+      updated_at: new Date().toISOString(),
+    }, { onConflict: 'room_id' })
+    refetchQueue()
+  }
+
   const removeFromQueue = async (id: string) => {
     const { error } = await supabase.from('queue').delete().eq('id', id)
     if (error) toast.error('Silinemedi: ' + error.message)
@@ -349,10 +434,13 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     volume,
     queueInput,
     setQueueInput,
+    isAddingPlaylist,
     ytReady,
     playerRef,
     currentSong,
     addToQueue,
+    addPlaylistToQueue,
+    clearQueue,
     removeFromQueue,
     handleNext,
     togglePlay,

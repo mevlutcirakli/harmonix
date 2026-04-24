@@ -14,8 +14,27 @@ export function getUserColor(username: string): string {
 
 // Single compiled regex — module-level, created once
 export const VIDEO_ID_RE = /(?:[?&]v=|youtu\.be\/|embed\/|shorts\/)([^?&]+)/
+export const PLAYLIST_ID_RE = /[?&]list=([^&#]+)/
 
 export const extractVideoId = (url: string): string | null => url.match(VIDEO_ID_RE)?.[1] ?? null
+export const extractPlaylistId = (url: string): string | null => url.match(PLAYLIST_ID_RE)?.[1] ?? null
+
+export function isPlaylistUrl(url: string): boolean {
+  if (!url) return false
+  const listId = extractPlaylistId(url)
+  if (!listId) return false
+  // YouTube Music album/curated playlist
+  if (listId.startsWith('RDCLAK')) return true
+  // YouTube Mix (auto-playlist around a video)
+  if (listId.startsWith('RDMM')) return true
+  // Regular user/channel playlist
+  if (listId.startsWith('PL')) return true
+  // music.youtube.com/playlist with any list= param
+  if (url.includes('music.youtube.com/playlist')) return true
+  // Has list= but no video ID → must be a playlist URL
+  if (!VIDEO_ID_RE.test(url)) return true
+  return false
+}
 
 // Intl object created once, not recreated on every call
 export const timeFormatter = new Intl.DateTimeFormat('tr-TR', { hour: '2-digit', minute: '2-digit' })
