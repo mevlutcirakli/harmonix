@@ -1,0 +1,188 @@
+/* ─── Animasyon ─────────────────────────────────────────────────────────── */
+
+@keyframes soundWave {
+  0%, 100% { transform: scaleY(0.3); }
+  50%       { transform: scaleY(1); }
+}
+
+/* ─── Sound Wave Bars ───────────────────────────────────────────────────── */
+
+.sound-wave { display: flex; align-items: flex-end; gap: 2px; height: 10px; }
+.sound-wave-bar {
+  width: 2px;
+  border-radius: 1px;
+  background-color: #3ecf8e;
+  height: 100%;
+  animation: soundWave 0.5s ease-in-out infinite;
+}
+
+/* ─── Avatarlar ─────────────────────────────────────────────────────────── */
+
+.avatar {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  color: #080808;
+  flex-shrink: 0;
+  transition: box-shadow 150ms ease;
+}
+.avatar-xs { width: 12px; height: 12px; font-size: 7px; }
+.avatar-sm { width: 18px; height: 18px; font-size: 8px; }
+.avatar-md { width: 24px; height: 24px; font-size: 10px; }
+.avatar--speaking { box-shadow: 0 0 0 2px #3ecf8e; }
+
+/* ─── Icon Buttons ──────────────────────────────────────────────────────── */
+
+.icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  flex-shrink: 0;
+  transition: background-color 150ms ease;
+  cursor: pointer;
+}
+.icon-btn-sm  { width: 28px; height: 28px; }
+.icon-btn-md  { width: 32px; height: 32px; }
+.icon-btn-lg  { width: 36px; height: 36px; }
+
+/* ghost: renksiz, hover'da hafif gri */
+.icon-btn-ghost         { color: #888; }
+.icon-btn-ghost:hover   { background-color: #1c1c1c; }
+
+/* active: yeşil */
+.icon-btn-active        { color: #3ecf8e; }
+.icon-btn-active:hover  { background-color: #1c1c1c; }
+
+/* muted: kırmızı arka plan (mikrofon kapalı) */
+.icon-btn-muted         { color: #f04444; background-color: rgba(240, 68, 68, 0.12); }
+.icon-btn-muted:hover   { background-color: rgba(240, 68, 68, 0.2); }
+
+/* danger: hover'da kırmızı (ayrıl butonu) */
+.icon-btn-danger        { color: #f04444; }
+.icon-btn-danger:hover  { background-color: rgba(240, 68, 68, 0.12); }
+
+/* ─── Bölüm Başlığı ─────────────────────────────────────────────────────── */
+
+.section-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: #444;
+  text-transform: uppercase;
+  margin: 0;
+}
+
+/* ─── Kanal Butonu ──────────────────────────────────────────────────────── */
+
+.channel-btn {
+  width: 100%;
+  text-align: left;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  transition: background-color 150ms ease;
+  cursor: pointer;
+}
+.channel-btn:not(.channel-btn--active):hover { background-color: #1c1c1c; }
+.channel-btn--active { color: #3ecf8e; background-color: rgba(62, 207, 142, 0.12); }
+
+/* ─── Kullanıcı Satırı ──────────────────────────────────────────────────── */
+
+.user-row {
+  display: flex;
+  align-items: center;
+  border-radius: 6px;
+  transition: background-color 150ms ease;
+}
+.user-row--speaking { background-color: rgba(62, 207, 142, 0.08); }
+
+/* ─── Etiketler ─────────────────────────────────────────────────────────── */
+
+.tag-green {
+  font-size: 10px;
+  padding: 1px 5px;
+  border-radius: 3px;
+  background-color: rgba(62, 207, 142, 0.12);
+  color: #3ecf8e;
+  flex-shrink: 0;
+}
+
+.crown-icon { color: #f59e0b; flex-shrink: 0; display: flex; }
+
+/* ─── Metin Kırpma ──────────────────────────────────────────────────────── */
+
+.text-truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ─── Ayırıcı ───────────────────────────────────────────────────────────── */
+
+.divider-v { width: 1px; height: 20px; background-color: rgba(255, 255, 255, 0.07); margin: 0 4px; }
+
+/* ─── Ses Kontrol Barı ──────────────────────────────────────────────────── */
+
+.voice-controls {
+  height: 52px;
+  padding: 0 12px;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+  background-color: #161616;
+  flex-shrink: 0;
+}
+
+/* ─── Panel Başlığı ─────────────────────────────────────────────────────── */
+
+.panel-header {
+  padding: 11px 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+  flex-shrink: 0;
+}
+
+/* ─── Boş Mesaj ─────────────────────────────────────────────────────────── */
+
+.empty-msg { font-size: 12px; text-align: center; margin-top: 16px; color: #444; }
+
+/* ─── YT Volume Slider ──────────────────────────────────────────────────── */
+
+.yt-volume-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  border-radius: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  outline: none;
+}
+.yt-volume-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3ecf8e;
+  cursor: pointer;
+}
+.yt-volume-slider::-moz-range-thumb {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #3ecf8e;
+  cursor: pointer;
+  border: none;
+}
+
+/* ─── Ses linki (YouTube) ───────────────────────────────────────────────── */
+
+.yt-link { flex-shrink: 0; opacity: 0.4; color: #ff0000; transition: opacity 150ms ease; }
+.yt-link:hover { opacity: 1; }
+
+/* ─── Kuyruk Sil Butonu ─────────────────────────────────────────────────── */
+
+.queue-remove-btn {
+  width: 20px; height: 20px; border-radius: 4px;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+  font-size: 16px; line-height: 1; color: #f04444;
+  opacity: 0.35; transition: opacity 150ms ease;
+}
+.queue-remove-btn:hover { opacity: 1; }
