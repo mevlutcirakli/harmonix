@@ -101,11 +101,12 @@ export async function GET(request: NextRequest) {
     let videos: VideoItem[]
     let title = 'Çalma Listesi'
 
-    if (listId.startsWith('RDMM')) {
-      // YouTube Mix playlist — uses /next endpoint with a seed videoId
-      const seedVideoId = videoId ?? listId.replace(/^RDMM/, '')
+    if (listId.startsWith('RD') && !listId.startsWith('RDCLAK')) {
+      // YouTube Mix variants (RDMM = Music Mix, RD = regular watch mix)
+      // Uses /next endpoint with a seed videoId
+      const seedVideoId = videoId ?? listId.replace(/^RD(MM)?/, '')
       videos = await fetchMixPlaylist(seedVideoId, listId)
-      title = 'YouTube Mix'
+      title = listId.startsWith('RDMM') ? 'YouTube Music Mix' : 'YouTube Mix'
     } else {
       const result = await fetchRegularPlaylist(listId)
       videos = result.videos

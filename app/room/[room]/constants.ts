@@ -25,8 +25,8 @@ export function isPlaylistUrl(url: string): boolean {
   if (!listId) return false
   // YouTube Music album/curated playlist
   if (listId.startsWith('RDCLAK')) return true
-  // YouTube Mix (auto-playlist around a video)
-  if (listId.startsWith('RDMM')) return true
+  // YouTube Mix variants (RDMM = Music Mix, RD = regular watch mix)
+  if (listId.startsWith('RD')) return true
   // Regular user/channel playlist
   if (listId.startsWith('PL')) return true
   // music.youtube.com/playlist with any list= param
