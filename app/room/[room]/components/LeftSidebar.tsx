@@ -121,7 +121,7 @@ export default function LeftSidebar({
                           <span className="text-truncate" style={{ fontSize: 11, color: isSpeaking ? '#f0f0f0' : '#888', flex: 1 }}>
                             {user}{user === username ? ' (sen)' : ''}
                           </span>
-                          {user === hostUsername && <span className="crown-icon" title="Müzik Hostu"><IconCrown /></span>}
+                          {user === hostUsername && user === username && <span className="crown-icon" title="Müzik Hostu"><IconCrown /></span>}
                           {isSpeaking && <SoundWaveBars />}
                         </div>
                       )

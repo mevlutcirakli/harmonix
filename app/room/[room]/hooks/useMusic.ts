@@ -6,6 +6,20 @@ import { toast } from 'sonner'
 import type { QueueItem, MusicStateRow, YTPlayerInstance } from '../types'
 import { extractVideoId } from '../constants'
 
+// Compute seek position based on DB state.
+// If is_playing=true : position = now - started_at (song clock keeps ticking).
+// If is_playing=false: position = updated_at - started_at (frozen at pause/leave moment).
+function calcSeek(startedAt: string | null, isPlaying: boolean, updatedAt: string | null): number {
+  if (!startedAt) return 0
+  if (isPlaying) {
+    return Math.max(0, Math.floor((Date.now() - new Date(startedAt).getTime()) / 1000))
+  }
+  if (updatedAt) {
+    return Math.max(0, Math.floor((new Date(updatedAt).getTime() - new Date(startedAt).getTime()) / 1000))
+  }
+  return 0
+}
+
 export function useMusic(voiceRoom: string, username: string, isInVoice: boolean) {
   const [queue, setQueue] = useState<QueueItem[]>([])
   const queueRef = useRef<QueueItem[]>([])
@@ -20,17 +34,15 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     typeof window !== 'undefined' && !!(window.YT && window.YT.Player)
   )
   const playerRef = useRef<YTPlayerInstance | null>(null)
-  const startedAtRef = useRef<string | null>(null)
-  const initialIsPlayingRef = useRef(true)
+
+  // Set once in initFromJoin, consumed by the player effect, then reset to 0.
+  const initialSeekRef = useRef<number>(0)
+  const initialPlayingRef = useRef<boolean>(true)
 
   const currentSong = queue[0] ?? null
   const currentVideoId = currentSong?.video_id ?? null
 
-  // Keep queueRef in sync
-  useEffect(() => {
-    queueRef.current = queue
-    if (queue[0]?.started_at) startedAtRef.current = queue[0].started_at
-  }, [queue])
+  useEffect(() => { queueRef.current = queue }, [queue])
 
   const refetchQueue = useCallback(() => {
     if (!voiceRoom) return
@@ -43,43 +55,41 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
       })
   }, [voiceRoom])
 
-  // Queue subscription
+  // Queue subscription — non-hosts seek whenever started_at changes (song start or host resume).
   useEffect(() => {
     if (!username || !voiceRoom) return
     refetchQueue()
 
-    const queueChannel = supabase.channel(`queue-${voiceRoom}`)
+    const ch = supabase.channel(`queue-${voiceRoom}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'queue' }, (payload) => {
         refetchQueue()
         type Row = { started_at?: string | null; video_id?: string }
         const newRow = payload.new as Row
-        const oldRow = payload.old as Row
         if (
           payload.eventType === 'UPDATE' &&
-          newRow.started_at && !oldRow.started_at &&
-          playerRef.current && newRow.video_id === queueRef.current[0]?.video_id
+          newRow.started_at &&
+          !isHostRef.current &&
+          playerRef.current &&
+          newRow.video_id === queueRef.current[0]?.video_id
         ) {
           const elapsed = Math.max(0, Math.floor(
             (Date.now() - new Date(newRow.started_at).getTime()) / 1000
           ))
           playerRef.current.seekTo(elapsed, true)
-          startedAtRef.current = newRow.started_at
         }
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(queueChannel) }
+    return () => { supabase.removeChannel(ch) }
   }, [voiceRoom, username, refetchQueue])
 
-  // music_state subscription
+  // music_state subscription — sync play/pause for non-hosts.
   useEffect(() => {
     if (!voiceRoom || !username) return
 
-    const stateChannel = supabase.channel(`music-state-${voiceRoom}`)
+    const ch = supabase.channel(`music-state-${voiceRoom}`)
       .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'music_state',
+        event: '*', schema: 'public', table: 'music_state',
         filter: `room_id=eq.${voiceRoom}`,
       }, (payload) => {
         const newState = payload.new as Partial<MusicStateRow>
@@ -105,13 +115,12 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
       })
       .subscribe()
 
-    return () => { supabase.removeChannel(stateChannel) }
+    return () => { supabase.removeChannel(ch) }
   }, [voiceRoom, username])
 
-  // YouTube IFrame API setup
+  // YouTube IFrame API bootstrap.
   useEffect(() => {
-    if (typeof window === 'undefined') return
-    if (window.YT && window.YT.Player) return
+    if (typeof window === 'undefined' || (window.YT && window.YT.Player)) return
     window.onYouTubeIframeAPIReady = () => setYtReady(true)
     if (!document.querySelector('script[src*="youtube.com/iframe_api"]')) {
       const tag = document.createElement('script')
@@ -120,76 +129,70 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     }
   }, [])
 
-  // Player lifecycle
+  // Player lifecycle — recreate player when song or voice state changes.
   useEffect(() => {
-    if (!ytReady || !isInVoice) return
+    if (!ytReady || !isInVoice || !currentVideoId) return
 
     if (playerRef.current) {
       try { playerRef.current.destroy() } catch {}
       playerRef.current = null
-      setIsPlaying(false)
     }
     const container = document.getElementById('yt-player-container')
     if (container) container.innerHTML = '<div id="yt-player"></div>'
 
-    if (!currentVideoId) return
-
-    const capturedId = queueRef.current[0]?.id
-    const capturedStartedAt = startedAtRef.current
+    // Capture and immediately reset so subsequent song changes start at 0.
+    const capturedSeek = initialSeekRef.current
+    const capturedPlaying = initialPlayingRef.current
     const capturedIsHost = isHostRef.current
-    const capturedInitialIsPlaying = initialIsPlayingRef.current
-
-    const elapsed = capturedStartedAt
-      ? Math.max(0, Math.floor((Date.now() - new Date(capturedStartedAt).getTime()) / 1000))
-      : 0
+    const capturedId = queueRef.current[0]?.id
+    const capturedStartedAt = queueRef.current[0]?.started_at ?? null
+    initialSeekRef.current = 0
 
     const p = new window.YT.Player('yt-player', {
       height: '1',
       width: '1',
       videoId: currentVideoId,
-      playerVars: { autoplay: 1, controls: 0, start: elapsed },
+      playerVars: { autoplay: 1, controls: 0, start: Math.floor(capturedSeek) },
       events: {
         onReady: (e: { target: YTPlayerInstance }) => {
           e.target.setVolume(volume)
-          if (!capturedStartedAt && capturedId && capturedIsHost) {
-            supabase.from('queue')
-              .update({ started_at: new Date().toISOString() })
-              .eq('id', capturedId)
-              .is('started_at', null)
-              .then()
-          }
-          e.target.playVideo()
-          if (!capturedIsHost && !capturedInitialIsPlaying) {
-            setTimeout(() => { try { e.target.pauseVideo() } catch {} }, 300)
-            setIsPlaying(false)
-          } else {
+
+          // For playing state: recalculate from started_at at the moment the player is
+          // actually ready, so the ~1-3s init delay is compensated automatically.
+          const seekPos = (capturedPlaying && capturedStartedAt)
+            ? Math.max(0, Math.floor((Date.now() - new Date(capturedStartedAt).getTime()) / 1000))
+            : capturedSeek
+
+          e.target.seekTo(seekPos, true)
+
+          if (capturedPlaying) {
+            e.target.playVideo()
             setIsPlaying(true)
+            // New song with no started_at yet — record when it begins.
+            if (capturedIsHost && capturedId && !capturedStartedAt) {
+              supabase.from('queue')
+                .update({ started_at: new Date().toISOString() })
+                .eq('id', capturedId)
+                .is('started_at', null)
+                .then()
+            }
+            // Sync is_playing=true for non-hosts who joined while host was becoming host.
+            if (capturedIsHost && voiceRoom) {
+              supabase.from('music_state').update({
+                is_playing: true,
+                updated_at: new Date().toISOString(),
+              }).eq('room_id', voiceRoom).then()
+            }
+          } else {
+            e.target.pauseVideo()
+            setIsPlaying(false)
           }
         },
         onStateChange: (e: { target: YTPlayerInstance; data: number }) => {
           if (e.data === window.YT.PlayerState.PLAYING) setIsPlaying(true)
           if (e.data === window.YT.PlayerState.PAUSED) setIsPlaying(false)
-          if (e.data === window.YT.PlayerState.ENDED) {
-            const [first, ...rest] = queueRef.current
-            if (first) {
-              supabase.from('queue').delete().eq('id', first.id).then(() => {
-                const nextStartedAt = new Date().toISOString()
-                if (rest[0]) {
-                  supabase.from('queue')
-                    .update({ started_at: nextStartedAt })
-                    .eq('id', rest[0].id)
-                    .is('started_at', null)
-                    .then()
-                }
-                supabase.from('music_state').upsert({
-                  room_id: voiceRoom,
-                  current_video_id: rest[0]?.video_id ?? null,
-                  started_at: rest[0] ? nextStartedAt : null,
-                  is_playing: !!rest[0],
-                  updated_at: new Date().toISOString(),
-                }, { onConflict: 'room_id' }).then()
-              })
-            }
+          if (e.data === window.YT.PlayerState.ENDED && isHostRef.current) {
+            advanceQueue()
           }
         },
       },
@@ -203,6 +206,26 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
       if (playerRef.current === p) playerRef.current = null
     }
   }, [ytReady, currentVideoId, isInVoice]) // eslint-disable-line
+
+  const advanceQueue = () => {
+    const [first, ...rest] = queueRef.current
+    if (!first) return
+    supabase.from('queue').delete().eq('id', first.id).then(() => {
+      const nextStartedAt = new Date().toISOString()
+      if (rest[0]) {
+        supabase.from('queue')
+          .update({ started_at: nextStartedAt })
+          .eq('id', rest[0].id)
+          .then()
+      }
+      supabase.from('music_state').update({
+        current_video_id: rest[0]?.video_id ?? null,
+        started_at: rest[0] ? nextStartedAt : null,
+        is_playing: !!rest[0],
+        updated_at: new Date().toISOString(),
+      }).eq('room_id', voiceRoom).then()
+    })
+  }
 
   const addToQueue = async () => {
     if (!voiceRoom) return
@@ -232,7 +255,6 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     if (error) { toast.error('Kuyruğa eklenemedi: ' + error.message); return }
 
     if (isFirstSong && firstStartedAt) {
-      startedAtRef.current = firstStartedAt
       await supabase.from('music_state').upsert({
         room_id: voiceRoom,
         current_video_id: videoId,
@@ -296,7 +318,6 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
       }
 
       if (isFirstSong && firstStartedAt) {
-        startedAtRef.current = firstStartedAt
         await supabase.from('music_state').upsert({
           room_id: voiceRoom,
           current_video_id: items[0].videoId,
@@ -320,13 +341,12 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     if (!voiceRoom) return
     const { error } = await supabase.from('queue').delete().eq('room_id', voiceRoom)
     if (error) { toast.error('Kuyruk temizlenemedi: ' + error.message); return }
-    await supabase.from('music_state').upsert({
-      room_id: voiceRoom,
+    await supabase.from('music_state').update({
       current_video_id: null,
       started_at: null,
       is_playing: false,
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'room_id' })
+    }).eq('room_id', voiceRoom)
     refetchQueue()
   }
 
@@ -346,18 +366,15 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
       await Promise.all([
         rest[0] && supabase.from('queue')
           .update({ started_at: nextStartedAt })
-          .eq('id', rest[0].id)
-          .is('started_at', null),
-        voiceRoom && supabase.from('music_state').upsert({
-          room_id: voiceRoom,
+          .eq('id', rest[0].id),
+        voiceRoom && supabase.from('music_state').update({
           current_video_id: rest[0]?.video_id ?? null,
           started_at: rest[0] ? nextStartedAt : null,
           is_playing: !!rest[0],
           updated_at: new Date().toISOString(),
-        }, { onConflict: 'room_id' }),
+        }).eq('room_id', voiceRoom),
       ].filter(Boolean))
-    } catch (error) {
-      console.error('Sonraki şarkıya geçilemiyor:', error)
+    } catch {
       toast.error('Sonraki şarkıya geçilemiyor')
     }
   }
@@ -366,16 +383,33 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     if (!isHostRef.current || !playerRef.current) return
     try {
       const newPlaying = !isPlaying
-      if (newPlaying) { playerRef.current.playVideo() } else { playerRef.current.pauseVideo() }
-      if (voiceRoom) {
-        await supabase.from('music_state').upsert({
-          room_id: voiceRoom,
-          is_playing: newPlaying,
-          updated_at: new Date().toISOString(),
-        }, { onConflict: 'room_id' })
+      const currentTime = playerRef.current.getCurrentTime()
+
+      if (newPlaying) {
+        playerRef.current.playVideo()
+        // Update started_at so others can calculate the correct live position.
+        const newStartedAt = new Date(Date.now() - currentTime * 1000).toISOString()
+        const item = queueRef.current[0]
+        if (voiceRoom && item) {
+          await supabase.from('queue')
+            .update({ started_at: newStartedAt })
+            .eq('id', item.id)
+          await supabase.from('music_state').update({
+            is_playing: true,
+            updated_at: new Date().toISOString(),
+          }).eq('room_id', voiceRoom)
+        }
+      } else {
+        playerRef.current.pauseVideo()
+        // updated_at records the freeze moment; others use updated_at - started_at for position.
+        if (voiceRoom) {
+          await supabase.from('music_state').update({
+            is_playing: false,
+            updated_at: new Date().toISOString(),
+          }).eq('room_id', voiceRoom)
+        }
       }
-    } catch (error) {
-      console.error('Oynatma durumu değiştirilemedi:', error)
+    } catch {
       toast.error('Oynatma durumu değiştirilemedi')
     }
   }
@@ -393,17 +427,19 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
   ) => {
     setQueue(queueData)
     queueRef.current = queueData
-    const queueStartedAt = queueData[0]?.started_at ?? null
-    startedAtRef.current = queueStartedAt ?? musicState?.started_at ?? null
 
-    if (becomeHost) {
-      initialIsPlayingRef.current = true
-      setHostUsername(joinUsername)
-    } else {
-      initialIsPlayingRef.current = musicState?.is_playing ?? true
-      setHostUsername(musicState?.host_username || '')
-    }
+    const isPlayingNow = becomeHost
+      ? (queueData.length > 0 && (musicState?.is_playing ?? false))
+      : (musicState?.is_playing ?? false)
 
+    initialPlayingRef.current = isPlayingNow
+    initialSeekRef.current = calcSeek(
+      queueData[0]?.started_at ?? null,
+      isPlayingNow,
+      musicState?.updated_at ?? null
+    )
+
+    setHostUsername(becomeHost ? joinUsername : (musicState?.host_username || ''))
     isHostRef.current = becomeHost
     setIsHost(becomeHost)
   }
@@ -414,7 +450,8 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     setHostUsername('')
     setQueue([])
     queueRef.current = []
-    startedAtRef.current = null
+    initialSeekRef.current = 0
+    initialPlayingRef.current = true
     setIsPlaying(false)
     setQueueInput('')
     if (playerRef.current) {
@@ -435,8 +472,6 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     queueInput,
     setQueueInput,
     isAddingPlaylist,
-    ytReady,
-    playerRef,
     currentSong,
     addToQueue,
     addPlaylistToQueue,

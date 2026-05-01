@@ -8,6 +8,7 @@ import { toast, Toaster } from 'sonner'
 import './room.css'
 
 import { ROOMS } from './constants'
+import { playJoinSound, playLeaveSound } from './sounds'
 import { useChat } from './hooks/useChat'
 import { useVoice } from './hooks/useVoice'
 import { useMusic } from './hooks/useMusic'
@@ -33,6 +34,7 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
   }, [username, router])
 
   const [sidebarOpen, setSidebarOpen] = useState(false)
+  const joiningVoiceRef = useRef(false)
   const [isFullscreen, setIsFullscreen] = useState(false)
   const screenContainerRef = useRef<HTMLDivElement>(null)
   const screenVideoRef = useRef<HTMLVideoElement>(null)
@@ -128,6 +130,8 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
 
   const handleJoinVoice = async (targetRoom: string) => {
     if (isInVoice && voiceRoom === targetRoom) { handleLeaveVoice(); return }
+    if (joiningVoiceRef.current) return
+    joiningVoiceRef.current = true
     try {
       const [tokenRes, { data: queueData }, { data: musicState }] = await Promise.all([
         fetch(`/api/livekit-token?room=${targetRoom}&username=${username}`).then(r => r.json()),
@@ -141,17 +145,18 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
         await supabase.from('music_state').upsert({
           room_id: targetRoom,
           host_username: username,
-          is_playing: false,
-          updated_at: new Date().toISOString(),
         }, { onConflict: 'room_id' })
         becomeHost = true
       }
 
       initFromJoin(queueData as QueueItem[] ?? [], musicState as MusicStateRow | null, becomeHost, username)
       await connectToRoom(targetRoom, token)
+      playJoinSound()
       setSidebarOpen(false)
     } catch {
       toast.error('Ses kanalına bağlanılamadı')
+    } finally {
+      joiningVoiceRef.current = false
     }
   }
 
@@ -159,13 +164,14 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
     if (isHostRef.current && voiceRoom) {
       const others = voiceParticipantsRef.current.filter((p: string) => p !== username)
       const nextHost = others[0] || null
-      await supabase.from('music_state').upsert({
-        room_id: voiceRoom,
+      // Only update the host field; never touch is_playing or updated_at here.
+      // is_playing keeps ticking (live sync). updated_at stays at the last pause moment
+      // so calcSeek can compute the frozen position on rejoin when is_playing=false.
+      await supabase.from('music_state').update({
         host_username: nextHost,
-        is_playing: false,
-        updated_at: new Date().toISOString(),
-      }, { onConflict: 'room_id' })
+      }).eq('room_id', voiceRoom)
     }
+    playLeaveSound()
     await disconnectFromRoom()
     resetOnLeave()
   }

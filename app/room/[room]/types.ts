@@ -10,6 +10,7 @@ export interface YTPlayerInstance {
   pauseVideo: () => void
   setVolume: (v: number) => void
   seekTo: (seconds: number, allowSeekAhead: boolean) => void
+  getCurrentTime: () => number
   destroy: () => void
 }
 
@@ -37,4 +38,5 @@ export interface MusicStateRow {
   is_playing: boolean
   current_video_id: string | null
   started_at: string | null
+  updated_at: string | null
 }

@@ -31,7 +31,7 @@ export default function UsersPanel({ users, speaking, currentUser, hostUsername 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                     <span className="text-truncate" style={{ fontSize: 12, color: '#f0f0f0' }}>{user}</span>
                     {user === currentUser && <span className="tag-green">sen</span>}
-                    {user === hostUsername && <span className="crown-icon" title="Müzik Hostu"><IconCrown /></span>}
+                    {user === hostUsername && user === currentUser && <span className="crown-icon" title="Müzik Hostu"><IconCrown /></span>}
                   </div>
                   {isSpeaking && <SoundWaveBars />}
                 </div>

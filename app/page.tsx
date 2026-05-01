@@ -16,9 +16,9 @@ const notifyAuth = () => _authListeners.forEach(fn => fn())
 // ─── Sabitler ────────────────────────────────────────────────────────────────
 
 const ROOMS = [
-  { id: 'genel', name: 'genel' },
-  { id: 'muzik', name: 'müzik' },
-  { id: 'oyun', name: 'oyun' },
+  { id: 'genel', name: 'Genel' },
+  { id: 'muzik', name: 'Müzik' },
+  { id: 'oyun', name: 'Oyun' },
 ]
 
 const USER_COLORS = ['#3ecf8e', '#6366f1', '#f59e0b', '#ef4444', '#3b82f6', '#ec4899', '#14b8a6']
@@ -115,147 +115,76 @@ export default function Home() {
   if (!loggedIn) return (
     <main style={{
       backgroundColor: '#080808',
-      minHeight: '100vh',
+      minHeight: '100dvh',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: 16,
+      padding: 20,
     }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-
-        {/* Giriş kartı */}
-        <div style={{
-          backgroundColor: '#0f0f0f',
-          border: '1px solid rgba(255,255,255,0.07)',
-          borderRadius: 12,
-          padding: 32,
-          width: 280,
-          boxSizing: 'border-box',
-        }}>
-          <div style={{ marginBottom: 24 }}>
-            <h1 style={{ fontSize: 18, fontWeight: 500, color: '#f0f0f0', margin: 0, lineHeight: 1 }}>
-              Harmonix
-            </h1>
-            <p style={{ color: '#888', fontSize: 13, margin: '8px 0 0' }}>
-              Devam etmek için kullanıcı adı gir
-            </p>
-          </div>
-
-          <input
-            style={{
-              display: 'block',
-              width: '100%',
-              height: 36,
-              fontSize: 13,
-              backgroundColor: '#161616',
-              border: '1px solid rgba(255,255,255,0.07)',
-              borderRadius: 8,
-              color: '#f0f0f0',
-              padding: '0 10px',
-              outline: 'none',
-              boxSizing: 'border-box',
-              transition: 'border-color 150ms ease',
-              marginBottom: 8,
-            }}
-            placeholder="Kullanıcı adın"
-            value={inputUsername}
-            onChange={(e) => setInputUsername(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-            onFocus={(e) => { e.currentTarget.style.borderColor = '#3ecf8e' }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
-          />
-
-          <button
-            onClick={handleLogin}
-            style={{
-              display: 'block',
-              width: '100%',
-              height: 36,
-              backgroundColor: '#3ecf8e',
-              color: '#080808',
-              fontWeight: 500,
-              fontSize: 13,
-              borderRadius: 8,
-              cursor: 'pointer',
-              transition: 'opacity 150ms ease',
-            }}
-            onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.88' }}
-            onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
-          >
-            Giriş Yap
-          </button>
-        </div>
-
-        {/* Odalar paneli */}
-        <div style={{ width: 200, paddingTop: 4 }}>
-          <p style={{
-            fontSize: 10,
-            fontWeight: 500,
-            letterSpacing: '0.08em',
-            color: '#444',
-            textTransform: 'uppercase',
-            margin: '0 0 6px 0',
-            padding: '0 6px',
-          }}>
-            Sesli Odalar
+      <div style={{
+        backgroundColor: '#0f0f0f',
+        border: '1px solid rgba(255,255,255,0.07)',
+        borderRadius: 14,
+        padding: '32px 28px',
+        width: '100%',
+        maxWidth: 320,
+        boxSizing: 'border-box',
+      }}>
+        <div style={{ marginBottom: 24 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: '#f0f0f0', margin: 0, lineHeight: 1 }}>
+            Harmonix
+          </h1>
+          <p style={{ color: '#888', fontSize: 13, margin: '8px 0 0', lineHeight: 1.5 }}>
+            Devam etmek için kullanıcı adı gir
           </p>
-          {ROOMS.map(r => {
-            const users = voicePresence[r.id] || []
-            return (
-              <div
-                key={r.id}
-                style={{
-                  borderRadius: 6,
-                  padding: '5px 8px',
-                  transition: 'background-color 150ms ease',
-                  cursor: 'default',
-                  marginBottom: 2,
-                }}
-                onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
-                onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
-                  <span style={{ color: users.length > 0 ? '#3ecf8e' : '#444', display: 'flex', flexShrink: 0 }}>
-                    <IconVolume />
-                  </span>
-                  <span style={{ fontSize: 13, color: users.length > 0 ? '#f0f0f0' : '#888' }}>
-                    {r.name}
-                  </span>
-                  {users.length > 0 && (
-                    <span style={{ fontSize: 10, color: '#3ecf8e', marginLeft: 'auto' }}>
-                      {users.length}
-                    </span>
-                  )}
-                </div>
-                {users.length > 0 && (
-                  <div style={{ paddingLeft: 20, marginTop: 5, display: 'flex', flexWrap: 'wrap', gap: 3 }}>
-                    {users.slice(0, 5).map(u => (
-                      <div
-                        key={u}
-                        style={{
-                          width: 16, height: 16, borderRadius: '50%',
-                          backgroundColor: getUserColor(u),
-                          display: 'flex', alignItems: 'center', justifyContent: 'center',
-                          fontSize: 8, color: '#080808', fontWeight: 600,
-                          flexShrink: 0,
-                        }}
-                        title={u}
-                      >
-                        {u[0]?.toUpperCase()}
-                      </div>
-                    ))}
-                    {users.length > 5 && (
-                      <span style={{ fontSize: 10, color: '#888', lineHeight: '16px' }}>
-                        +{users.length - 5}
-                      </span>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })}
         </div>
 
+        <input
+          style={{
+            display: 'block',
+            width: '100%',
+            height: 40,
+            fontSize: 14,
+            backgroundColor: '#161616',
+            border: '1px solid rgba(255,255,255,0.07)',
+            borderRadius: 8,
+            color: '#f0f0f0',
+            padding: '0 12px',
+            outline: 'none',
+            boxSizing: 'border-box',
+            transition: 'border-color 150ms ease',
+            marginBottom: 10,
+          }}
+          placeholder="Kullanıcı adın"
+          value={inputUsername}
+          onChange={(e) => setInputUsername(e.target.value)}
+          onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
+          onFocus={(e) => { e.currentTarget.style.borderColor = '#3ecf8e' }}
+          onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)' }}
+          autoFocus
+          autoComplete="off"
+          autoCapitalize="off"
+        />
+
+        <button
+          onClick={handleLogin}
+          style={{
+            display: 'block',
+            width: '100%',
+            height: 40,
+            backgroundColor: '#3ecf8e',
+            color: '#080808',
+            fontWeight: 600,
+            fontSize: 14,
+            borderRadius: 8,
+            cursor: 'pointer',
+            transition: 'opacity 150ms ease',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = '0.85' }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '1' }}
+        >
+          Giriş Yap
+        </button>
       </div>
     </main>
   )
