@@ -6,7 +6,6 @@ import { ROOMS, formatTime, getUserColor } from '../constants'
 import {
   IconHash,
   IconVolume,
-  IconCrown,
   IconHamburger,
   IconMonitor,
   IconFullscreen,
@@ -19,13 +18,13 @@ interface ChatAreaProps {
   textRoomName: string
   voiceRoom: string
   isInVoice: boolean
-  isHost: boolean
   onSidebarOpen: () => void
   onlineUsers: string[]
   currentSong: QueueItem | null
   isPlaying: boolean
   volume: number
   onTogglePlay: () => void
+  onPrev: () => void
   onNext: () => void
   onVolumeChange: (v: number) => void
   screenTrack: MediaStreamTrack | null
@@ -45,13 +44,13 @@ export default function ChatArea({
   textRoomName,
   voiceRoom,
   isInVoice,
-  isHost,
   onSidebarOpen,
   onlineUsers,
   currentSong,
   isPlaying,
   volume,
   onTogglePlay,
+  onPrev,
   onNext,
   onVolumeChange,
   screenTrack,
@@ -90,15 +89,6 @@ export default function ChatArea({
           </span>
         )}
 
-        {isInVoice && isHost && (
-          <span
-            className="hidden sm:flex"
-            style={{ fontSize: 11, padding: '2px 8px', borderRadius: 20, alignItems: 'center', gap: 4, backgroundColor: 'rgba(245,158,11,0.12)', color: '#f59e0b' }}
-          >
-            <IconCrown /> Host
-          </span>
-        )}
-
         <span style={{ marginLeft: 'auto', fontSize: 12, color: '#444', flexShrink: 0 }}>
           {onlineUsers.length} çevrimiçi
         </span>
@@ -110,10 +100,9 @@ export default function ChatArea({
           song={currentSong}
           isPlaying={isPlaying}
           volume={volume}
-          isHost={isHost}
           onTogglePlay={onTogglePlay}
+          onPrev={onPrev}
           onNext={onNext}
-          onPrev={() => {}}
           onVolumeChange={onVolumeChange}
         />
       )}

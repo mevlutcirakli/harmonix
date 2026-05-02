@@ -79,6 +79,7 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
     addPlaylistToQueue,
     clearQueue,
     removeFromQueue,
+    handlePrev,
     handleNext,
     togglePlay,
     handleVolumeChange,
@@ -218,13 +219,13 @@ export default function RoomPage({ params }: { params: Promise<{ room: string }>
         textRoomName={textRoomName}
         voiceRoom={voiceRoom}
         isInVoice={isInVoice}
-        isHost={isHost}
         onSidebarOpen={() => setSidebarOpen(true)}
         onlineUsers={onlineUsers}
         currentSong={currentSong}
         isPlaying={isPlaying}
         volume={volume}
         onTogglePlay={togglePlay}
+        onPrev={handlePrev}
         onNext={handleNext}
         onVolumeChange={handleVolumeChange}
         screenTrack={screenTrack}

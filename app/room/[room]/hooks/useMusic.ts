@@ -68,7 +68,6 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
         if (
           payload.eventType === 'UPDATE' &&
           newRow.started_at &&
-          !isHostRef.current &&
           playerRef.current &&
           newRow.video_id === queueRef.current[0]?.video_id
         ) {
@@ -103,7 +102,7 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
           setHostUsername(newState.host_username || '')
         }
 
-        if (!isHostRef.current && playerRef.current) {
+        if (playerRef.current) {
           if (newState.is_playing === true) {
             playerRef.current.playVideo()
             setIsPlaying(true)
@@ -356,8 +355,28 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     else refetchQueue()
   }
 
+  const handlePrev = async () => {
+    const item = queueRef.current[0]
+    if (!item || !voiceRoom) return
+    try {
+      const newStartedAt = new Date().toISOString()
+      await Promise.all([
+        supabase.from('queue').update({ started_at: newStartedAt }).eq('id', item.id),
+        supabase.from('music_state').update({
+          is_playing: true,
+          updated_at: new Date().toISOString(),
+        }).eq('room_id', voiceRoom),
+      ])
+      if (playerRef.current) {
+        playerRef.current.seekTo(0, true)
+        playerRef.current.playVideo()
+      }
+    } catch {
+      toast.error('Şarkı yeniden başlatılamadı')
+    }
+  }
+
   const handleNext = async () => {
-    if (!isHostRef.current) return
     const [first, ...rest] = queueRef.current
     if (!first) return
     try {
@@ -380,7 +399,7 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
   }
 
   const togglePlay = async () => {
-    if (!isHostRef.current || !playerRef.current) return
+    if (!playerRef.current) return
     try {
       const newPlaying = !isPlaying
       const currentTime = playerRef.current.getCurrentTime()
@@ -477,6 +496,7 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     addPlaylistToQueue,
     clearQueue,
     removeFromQueue,
+    handlePrev,
     handleNext,
     togglePlay,
     handleVolumeChange,

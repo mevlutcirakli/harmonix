@@ -1,6 +1,5 @@
 'use client'
 
-import Image from 'next/image'
 import { IconSkipBack, IconSkipForward, IconPause, IconPlay, IconYouTube } from '../icons'
 import type { QueueItem } from '../types'
 
@@ -8,7 +7,6 @@ interface MusicPlayerBarProps {
   song: QueueItem
   isPlaying: boolean
   volume: number
-  isHost: boolean
   onTogglePlay: () => void
   onNext: () => void
   onPrev: () => void
@@ -19,7 +17,6 @@ export default function MusicPlayerBar({
   song,
   isPlaying,
   volume,
-  isHost,
   onTogglePlay,
   onNext,
   onPrev,
@@ -61,52 +58,52 @@ export default function MusicPlayerBar({
           textOverflow: 'ellipsis',
           whiteSpace: 'nowrap',
         }}>
-          {song.added_by}{!isHost ? ' · sadece host kontrolü' : ''}
+          {song.added_by}
         </div>
       </div>
 
       <div style={{ display: 'flex', alignItems: 'center', gap: 2, flexShrink: 0 }}>
         <button
-          onClick={isHost ? onPrev : undefined}
-          title="Önceki"
+          onClick={onPrev}
+          title="Başa al"
           style={{
             width: 28, height: 28, borderRadius: 6,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: isHost ? '#888' : '#333',
-            cursor: isHost ? 'pointer' : 'default',
+            color: '#888',
+            cursor: 'pointer',
             transition: 'background-color 150ms ease',
           }}
-          onMouseEnter={(e) => { if (isHost) e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
         >
           <IconSkipBack />
         </button>
         <button
-          onClick={isHost ? onTogglePlay : undefined}
+          onClick={onTogglePlay}
           title={isPlaying ? 'Duraklat' : 'Oynat'}
           style={{
             width: 32, height: 32, borderRadius: 6,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: isHost ? '#f0f0f0' : '#444',
-            cursor: isHost ? 'pointer' : 'default',
+            color: '#f0f0f0',
+            cursor: 'pointer',
             transition: 'background-color 150ms ease',
           }}
-          onMouseEnter={(e) => { if (isHost) e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
         >
           {isPlaying ? <IconPause /> : <IconPlay />}
         </button>
         <button
-          onClick={isHost ? onNext : undefined}
+          onClick={onNext}
           title="Sonraki"
           style={{
             width: 28, height: 28, borderRadius: 6,
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            color: isHost ? '#888' : '#333',
-            cursor: isHost ? 'pointer' : 'default',
+            color: '#888',
+            cursor: 'pointer',
             transition: 'background-color 150ms ease',
           }}
-          onMouseEnter={(e) => { if (isHost) e.currentTarget.style.backgroundColor = '#1c1c1c' }}
+          onMouseEnter={(e) => { e.currentTarget.style.backgroundColor = '#1c1c1c' }}
           onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = 'transparent' }}
         >
           <IconSkipForward />
