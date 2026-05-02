@@ -34,6 +34,7 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     typeof window !== 'undefined' && !!(window.YT && window.YT.Player)
   )
   const playerRef = useRef<YTPlayerInstance | null>(null)
+  const controlChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
 
   // Set once in initFromJoin, consumed by the player effect, then reset to 0.
   const initialSeekRef = useRef<number>(0)
@@ -81,6 +82,33 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
 
     return () => { supabase.removeChannel(ch) }
   }, [voiceRoom, username, refetchQueue])
+
+  // Broadcast channel — instant play/pause/seek signals between connected users.
+  useEffect(() => {
+    if (!voiceRoom || !isInVoice) return
+
+    const ch = supabase.channel(`music-ctrl-${voiceRoom}`)
+      .on('broadcast', { event: 'ctrl' }, ({ payload }) => {
+        const p = playerRef.current
+        if (!p) return
+        if (payload.action === 'play') {
+          p.seekTo(payload.pos ?? 0, true)
+          p.playVideo()
+          setIsPlaying(true)
+        } else if (payload.action === 'pause') {
+          p.seekTo(payload.pos ?? 0, true)
+          p.pauseVideo()
+          setIsPlaying(false)
+        }
+      })
+      .subscribe()
+
+    controlChannelRef.current = ch
+    return () => {
+      supabase.removeChannel(ch)
+      controlChannelRef.current = null
+    }
+  }, [voiceRoom, isInVoice])
 
   // music_state subscription — sync play/pause for non-hosts.
   useEffect(() => {
@@ -359,6 +387,15 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
     const item = queueRef.current[0]
     if (!item || !voiceRoom) return
     try {
+      if (playerRef.current) {
+        playerRef.current.seekTo(0, true)
+        playerRef.current.playVideo()
+      }
+      setIsPlaying(true)
+      controlChannelRef.current?.send({
+        type: 'broadcast', event: 'ctrl',
+        payload: { action: 'play', pos: 0 },
+      })
       const newStartedAt = new Date().toISOString()
       await Promise.all([
         supabase.from('queue').update({ started_at: newStartedAt }).eq('id', item.id),
@@ -367,10 +404,6 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
           updated_at: new Date().toISOString(),
         }).eq('room_id', voiceRoom),
       ])
-      if (playerRef.current) {
-        playerRef.current.seekTo(0, true)
-        playerRef.current.playVideo()
-      }
     } catch {
       toast.error('Şarkı yeniden başlatılamadı')
     }
@@ -401,12 +434,16 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
   const togglePlay = async () => {
     if (!playerRef.current) return
     try {
-      const newPlaying = !isPlaying
       const currentTime = playerRef.current.getCurrentTime()
+      const newPlaying = !isPlaying
 
       if (newPlaying) {
         playerRef.current.playVideo()
-        // Update started_at so others can calculate the correct live position.
+        setIsPlaying(true)
+        controlChannelRef.current?.send({
+          type: 'broadcast', event: 'ctrl',
+          payload: { action: 'play', pos: currentTime },
+        })
         const newStartedAt = new Date(Date.now() - currentTime * 1000).toISOString()
         const item = queueRef.current[0]
         if (voiceRoom && item) {
@@ -420,7 +457,11 @@ export function useMusic(voiceRoom: string, username: string, isInVoice: boolean
         }
       } else {
         playerRef.current.pauseVideo()
-        // updated_at records the freeze moment; others use updated_at - started_at for position.
+        setIsPlaying(false)
+        controlChannelRef.current?.send({
+          type: 'broadcast', event: 'ctrl',
+          payload: { action: 'pause', pos: currentTime },
+        })
         if (voiceRoom) {
           await supabase.from('music_state').update({
             is_playing: false,

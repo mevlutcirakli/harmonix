@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import {
   LiveKitRoom,
   RoomAudioRenderer,
@@ -8,6 +9,7 @@ import { ROOMS } from '../constants'
 import {
   IconHash,
   IconVolume,
+  IconVolumeOff,
   IconCrown,
   IconLogOut,
 } from '../icons'
@@ -17,6 +19,7 @@ import VoiceControls from './VoiceControls'
 import SpeakerListener from './SpeakerListener'
 import VoiceParticipantListener from './VoiceParticipantListener'
 import ScreenShareViewer from './ScreenShareViewer'
+import RemoteMuteApplier from './RemoteMuteApplier'
 
 interface LeftSidebarProps {
   sidebarOpen: boolean
@@ -57,6 +60,17 @@ export default function LeftSidebar({
   setVoiceParticipants,
   setScreenTrack,
 }: LeftSidebarProps) {
+  const [locallyMuted, setLocallyMuted] = useState<Set<string>>(new Set())
+
+  const toggleLocalMute = (user: string) => {
+    setLocallyMuted(prev => {
+      const next = new Set(prev)
+      if (next.has(user)) next.delete(user)
+      else next.add(user)
+      return next
+    })
+  }
+
   return (
     <div
       className={`fixed md:relative z-50 md:z-auto h-full flex flex-col flex-shrink-0 transition-transform duration-200 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}`}
@@ -114,15 +128,31 @@ export default function LeftSidebar({
                   <div style={{ paddingLeft: 24, marginTop: 2, display: 'flex', flexDirection: 'column', gap: 2 }}>
                     {voiceParticipants.map(user => {
                       const isSpeaking = speaking.has(user)
+                      const isMuted = user !== username && locallyMuted.has(user)
                       return (
                         <div key={user} className={`user-row${isSpeaking ? ' user-row--speaking' : ''}`}
                           style={{ gap: 6, padding: '2px 8px' }}>
-                          <Avatar username={user} size="sm" speaking={isSpeaking} />
-                          <span className="text-truncate" style={{ fontSize: 11, color: isSpeaking ? '#f0f0f0' : '#888', flex: 1 }}>
+                          <Avatar username={user} size="sm" speaking={isSpeaking && !isMuted} />
+                          <span className="text-truncate" style={{ fontSize: 11, color: isMuted ? '#555' : isSpeaking ? '#f0f0f0' : '#888', flex: 1 }}>
                             {user}{user === username ? ' (sen)' : ''}
                           </span>
                           {user === hostUsername && user === username && <span className="crown-icon" title="Müzik Hostu"><IconCrown /></span>}
-                          {isSpeaking && <SoundWaveBars />}
+                          {user !== username && (
+                            <button
+                              onClick={() => toggleLocalMute(user)}
+                              title={isMuted ? 'Sesi Aç' : 'Sesi Kapat'}
+                              style={{
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                width: 18, height: 18, borderRadius: 4, flexShrink: 0,
+                                color: isMuted ? '#ef4444' : '#555',
+                                transition: 'color 150ms ease',
+                              }}
+                              className="icon-btn"
+                            >
+                              {isMuted ? <IconVolumeOff size={12} /> : <IconVolume />}
+                            </button>
+                          )}
+                          {isSpeaking && !isMuted && <SoundWaveBars />}
                         </div>
                       )
                     })}
@@ -147,6 +177,7 @@ export default function LeftSidebar({
           <SpeakerListener onSpeakersChange={setSpeaking} />
           <VoiceParticipantListener onParticipantsChange={setVoiceParticipants} />
           <ScreenShareViewer onScreenShare={setScreenTrack} />
+          <RemoteMuteApplier locallyMuted={locallyMuted} />
           <VoiceControls onLeave={onLeaveVoice} />
         </LiveKitRoom>
       )}

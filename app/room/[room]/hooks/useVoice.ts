@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
 
 export function useVoice(username: string) {
@@ -16,6 +16,25 @@ export function useVoice(username: string) {
     voiceParticipantsRef.current = p
     _setVoiceParticipants(p)
   }, [])
+
+  useEffect(() => {
+    if (!voiceRoom) return
+
+    const refetch = () =>
+      supabase.from('voice_presence').select('username').eq('room_id', voiceRoom)
+        .then(({ data }) => { if (data) setVoiceParticipants(data.map(r => r.username)) })
+
+    refetch()
+
+    const ch = supabase.channel(`vp-${voiceRoom}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'voice_presence',
+        filter: `room_id=eq.${voiceRoom}`,
+      }, refetch)
+      .subscribe()
+
+    return () => { supabase.removeChannel(ch) }
+  }, [voiceRoom, setVoiceParticipants])
 
   const connectToRoom = async (targetRoom: string, token: string) => {
     await supabase.from('voice_presence').upsert(
