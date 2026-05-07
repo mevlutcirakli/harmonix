@@ -29,6 +29,7 @@ interface SidePanelProps {
   isAdding: boolean
   isInVoice: boolean
   onAddToQueue: (input: string) => void
+  onAddPlaylistToQueue: (url: string) => void
   onTogglePlay: () => void
   onSkip: () => void
   onRemoveFromQueue: (id: string) => void
@@ -42,7 +43,7 @@ export default function SidePanel({
   onlineUsers, channelParticipants, speaking, mutedParticipants,
   queue, currentSong, volume, isMuted, pausedAt,
   queueInput, setQueueInput, isAdding, isInVoice,
-  onAddToQueue, onTogglePlay, onSkip, onRemoveFromQueue, onClearQueue,
+  onAddToQueue, onAddPlaylistToQueue, onTogglePlay, onSkip, onRemoveFromQueue, onClearQueue,
   onVolumeChange, onToggleMute,
 }: SidePanelProps) {
   const [tab, setTab] = useState<'chat' | 'music'>('chat')
@@ -135,6 +136,7 @@ export default function SidePanel({
             isAdding={isAdding}
             isInVoice={isInVoice}
             onAddToQueue={onAddToQueue}
+            onAddPlaylistToQueue={onAddPlaylistToQueue}
             onTogglePlay={onTogglePlay}
             onSkip={onSkip}
             onRemoveFromQueue={onRemoveFromQueue}

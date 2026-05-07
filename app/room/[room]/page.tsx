@@ -49,7 +49,7 @@ export default function RoomPage() {
   const {
     queue, currentSong, volume, isMuted, pausedAt,
     queueInput, setQueueInput, isAdding,
-    addToQueue, togglePlay, skip, removeFromQueue,
+    addToQueue, addPlaylistToQueue, togglePlay, skip, removeFromQueue,
     clearQueue, handleVolumeChange, toggleMute, resetOnLeave,
   } = useMusic(voiceRoom || 'genel', username, isInVoice)
 
@@ -207,6 +207,7 @@ export default function RoomPage() {
         isAdding={isAdding}
         isInVoice={isInVoice}
         onAddToQueue={addToQueue}
+        onAddPlaylistToQueue={addPlaylistToQueue}
         onTogglePlay={togglePlay}
         onSkip={skip}
         onRemoveFromQueue={removeFromQueue}

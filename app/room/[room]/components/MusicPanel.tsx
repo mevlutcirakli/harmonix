@@ -14,6 +14,7 @@ interface MusicPanelProps {
   isAdding: boolean
   isInVoice: boolean
   onAddToQueue: (input: string) => void
+  onAddPlaylistToQueue: (url: string) => void
   onTogglePlay: () => void
   onSkip: () => void
   onRemoveFromQueue: (id: string) => void
@@ -25,11 +26,14 @@ interface MusicPanelProps {
 export default function MusicPanel({
   queue, currentSong, volume, isMuted, pausedAt,
   queueInput, setQueueInput, isAdding, isInVoice,
-  onAddToQueue, onTogglePlay, onSkip, onRemoveFromQueue, onClearQueue,
+  onAddToQueue, onAddPlaylistToQueue, onTogglePlay, onSkip, onRemoveFromQueue, onClearQueue,
   onVolumeChange, onToggleMute,
 }: MusicPanelProps) {
   const isPlaying = currentSong !== null && pausedAt === null
-  const pendingQueue = queue.filter(q => q.started_at === null)
+const isPlaylistUrl = (() => {
+    try { return new URL(queueInput.trim()).searchParams.has('list') }
+    catch { return false }
+  })()
 
   return (
     <div style={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
@@ -122,7 +126,7 @@ export default function MusicPanel({
           }}>
             Sıradakiler
           </span>
-          {pendingQueue.length > 0 && (
+          {queue.length > 0 && (
             <button
               onClick={onClearQueue}
               style={{ fontSize: 10, color: 'var(--text-3)', transition: 'color 150ms' }}
@@ -232,6 +236,24 @@ export default function MusicPanel({
               : 'Ekle'
             }
           </button>
+
+          {isPlaylistUrl && (
+            <button
+              onClick={() => onAddPlaylistToQueue(queueInput)}
+              disabled={isAdding || !isInVoice}
+              style={{
+                height: 32, padding: '0 10px',
+                background: isAdding || !isInVoice ? 'var(--elevated)' : 'rgba(62,207,142,0.15)',
+                color: isAdding || !isInVoice ? 'var(--text-3)' : 'var(--accent)',
+                border: '1px solid rgba(62,207,142,0.3)',
+                borderRadius: 7, fontSize: 11, fontWeight: 600, flexShrink: 0,
+                transition: 'background 150ms',
+                cursor: isAdding || !isInVoice ? 'not-allowed' : 'pointer',
+              }}
+            >
+              Listele
+            </button>
+          )}
         </div>
         {!isInVoice && (
           <p style={{ fontSize: 10, color: 'var(--text-3)', marginTop: 5, textAlign: 'center' }}>

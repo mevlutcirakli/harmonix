@@ -236,6 +236,62 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
     }
   }
 
+  const addPlaylistToQueue = async (url: string) => {
+    setIsAdding(true)
+    const toastId = toast.loading('Çalma listesi yükleniyor...')
+    try {
+      const res = await fetch(`/api/playlist?url=${encodeURIComponent(url)}`)
+      const body = await res.json()
+
+      if (!res.ok) {
+        toast.error(body.error ?? 'Çalma listesi alınamadı', { id: toastId })
+        return
+      }
+
+      const { items, title } = body as {
+        items: { videoId: string; title: string; thumbnail: string }[]
+        title: string
+      }
+
+      if (!items?.length) {
+        toast.error('Çalma listesinde video bulunamadı', { id: toastId })
+        return
+      }
+
+      toast.loading(`${items.length} şarkı ekleniyor...`, { id: toastId })
+
+      const hasPlaying = currentSongRef.current !== null
+      const hasPending = queueRef.current.some(q => q.started_at === null)
+      const baseTime = Date.now()
+
+      const insertData = items.map((item, idx) => ({
+        room_id: roomId,
+        video_id: item.videoId,
+        title: item.title,
+        thumbnail: item.thumbnail,
+        added_by: username,
+        added_at: new Date(baseTime + idx * 10).toISOString(),
+        started_at: (!hasPlaying && !hasPending && idx === 0) ? new Date().toISOString() : null,
+      }))
+
+      const BATCH = 50
+      for (let i = 0; i < insertData.length; i += BATCH) {
+        const { error } = await supabase.from('queue').insert(insertData.slice(i, i + BATCH))
+        if (error) {
+          toast.error('Bazı şarkılar eklenemedi', { id: toastId })
+          return
+        }
+      }
+
+      toast.success(`"${title}" — ${items.length} şarkı eklendi`, { id: toastId })
+      setQueueInput('')
+    } catch {
+      toast.error('Bir hata oluştu', { id: toastId })
+    } finally {
+      setIsAdding(false)
+    }
+  }
+
   const togglePlay = () => {
     if (!currentSong) return
     if (pausedAt !== null) {
@@ -264,8 +320,11 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
 
   const clearQueue = async () => {
     if (currentSong) broadcastMusic({ type: 'skip' })
-    await supabase.from('queue').delete().eq('room_id', roomId)
+    p()?.stopVideo()
     syncedRef.current = ''
+    setPausedAt(null)
+    await supabase.from('queue').delete().eq('room_id', roomId)
+    setQueue([])
   }
 
   const handleVolumeChange = (v: number) => {
@@ -296,6 +355,7 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
     setQueueInput,
     isAdding,
     addToQueue,
+    addPlaylistToQueue,
     togglePlay,
     skip,
     removeFromQueue,
