@@ -9,6 +9,7 @@ interface VoiceChannelGridProps {
   isInVoice: boolean
   channelParticipants: Record<string, Participant[]>
   speaking: Set<string>
+  mutedParticipants: Set<string>
   username: string
   currentSong: QueueItem | null
   onJoinVoice: (roomId: string) => void
@@ -16,7 +17,7 @@ interface VoiceChannelGridProps {
 }
 
 export default function VoiceChannelGrid({
-  voiceRoom, isInVoice, channelParticipants, speaking, username, currentSong,
+  voiceRoom, isInVoice, channelParticipants, speaking, mutedParticipants, username, currentSong,
   onJoinVoice, onLeaveVoice,
 }: VoiceChannelGridProps) {
   return (
@@ -52,6 +53,7 @@ export default function VoiceChannelGrid({
             isActive={isInVoice && voiceRoom === r.id}
             participants={channelParticipants[r.id] ?? []}
             speaking={speaking}
+            mutedParticipants={mutedParticipants}
             username={username}
             currentSong={isInVoice && voiceRoom === r.id ? currentSong : null}
             onJoin={() => onJoinVoice(r.id)}

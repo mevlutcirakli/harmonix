@@ -1,7 +1,8 @@
 'use client'
 
 import { useState } from 'react'
-import { VOICE_ROOMS, getUserColor } from '../constants'
+import { VOICE_ROOMS } from '../constants'
+import { getAvatarUrl } from '@/lib/avatar'
 import { IconSpeaker, IconLogOut } from '../icons'
 import type { Participant } from '../types'
 
@@ -19,8 +20,6 @@ export default function LeftNav({
   voiceRoom, isInVoice, channelParticipants, username, onJoinVoice, onLeaveVoice, onLogout
 }: LeftNavProps) {
   const [hoveredRoom, setHoveredRoom] = useState<string | null>(null)
-  const avatarBg = getUserColor(username)
-  const initial = username.charAt(0).toUpperCase()
 
   return (
     <div style={{
@@ -144,12 +143,17 @@ export default function LeftNav({
           title={username}
           style={{
             width: 36, height: 36, borderRadius: '50%',
-            background: avatarBg,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: 13, fontWeight: 700, color: '#fff', userSelect: 'none',
+            overflow: 'hidden', flexShrink: 0,
+            background: 'var(--surface)',
           }}
         >
-          {initial}
+          <img
+            src={getAvatarUrl(username)}
+            alt={username}
+            width={36}
+            height={36}
+            style={{ display: 'block', width: '100%', height: '100%' }}
+          />
         </div>
         <button
           onClick={onLogout}

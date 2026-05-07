@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef, useSyncExternalStore, useMemo } from 'react'
+import { useState, useEffect, useRef, useSyncExternalStore, useMemo, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import { toast, Toaster } from 'sonner'
 import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react'
@@ -19,6 +19,7 @@ import VoiceControlBar from './components/VoiceControlBar'
 import SpeakerListener from './components/SpeakerListener'
 import VoiceParticipantListener from './components/VoiceParticipantListener'
 import RemoteMuteApplier from './components/RemoteMuteApplier'
+import MuteStateListener from './components/MuteStateListener'
 
 export default function RoomPage() {
   const router = useRouter()
@@ -37,11 +38,12 @@ export default function RoomPage() {
   const [remoteParticipants, setRemoteParticipants] = useState<Record<string, Participant[]>>({})
   const presenceChRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const [presenceReady, setPresenceReady] = useState(false)
+  const [remoteMuted, setRemoteMuted] = useState<Set<string>>(new Set())
 
   const { messages, input, setInput, onlineUsers, sendMessage, bottomRef } =
     useChat('genel', username, router)
 
-  const { voiceRoom, isInVoice, liveKitToken, speaking, setSpeaking, connectToRoom, disconnectFromRoom } =
+  const { voiceRoom, isInVoice, liveKitToken, speaking, setSpeaking, micMuted, setMicMuted, connectToRoom, disconnectFromRoom } =
     useVoice(username)
 
   const {
@@ -50,6 +52,16 @@ export default function RoomPage() {
     addToQueue, togglePlay, skip, removeFromQueue,
     clearQueue, handleVolumeChange, toggleMute, resetOnLeave,
   } = useMusic(voiceRoom || 'genel', username, isInVoice)
+
+  const mutedParticipants = useMemo(() => {
+    const set = new Set(remoteMuted)
+    if (micMuted) set.add(username)
+    return set
+  }, [remoteMuted, micMuted, username])
+
+  const handleRemoteMuteChange = useCallback((muted: Set<string>) => {
+    setRemoteMuted(muted)
+  }, [])
 
   // Subscribe to presence channel as observer. Only sync events feed remoteParticipants.
   useEffect(() => {
@@ -167,6 +179,7 @@ export default function RoomPage() {
         isInVoice={isInVoice}
         channelParticipants={channelParticipants}
         speaking={speaking}
+        mutedParticipants={mutedParticipants}
         username={username}
         currentSong={currentSong}
         onJoinVoice={handleJoinVoice}
@@ -183,6 +196,7 @@ export default function RoomPage() {
         onlineUsers={onlineUsers}
         channelParticipants={channelParticipants}
         speaking={speaking}
+        mutedParticipants={mutedParticipants}
         queue={queue}
         currentSong={currentSong}
         volume={volume}
@@ -212,8 +226,14 @@ export default function RoomPage() {
           <RoomAudioRenderer />
           <SpeakerListener onSpeakersChange={setSpeaking} />
           <VoiceParticipantListener />
+          <MuteStateListener onMuteChange={handleRemoteMuteChange} />
           <RemoteMuteApplier locallyMuted={new Set()} />
-          <VoiceControlBar voiceRoom={voiceRoom} onLeave={handleLeaveVoice} />
+          <VoiceControlBar
+            voiceRoom={voiceRoom}
+            micMuted={micMuted}
+            onMicMutedChange={setMicMuted}
+            onLeave={handleLeaveVoice}
+          />
         </LiveKitRoom>
       )}
     </div>

@@ -11,6 +11,7 @@ interface VoiceChannelCardProps {
   isActive: boolean
   participants: Participant[]
   speaking: Set<string>
+  mutedParticipants: Set<string>
   username: string
   currentSong: QueueItem | null
   onJoin: () => void
@@ -18,7 +19,7 @@ interface VoiceChannelCardProps {
 }
 
 export default function VoiceChannelCard({
-  room, isActive, participants, speaking, username, currentSong, onJoin, onLeave
+  room, isActive, participants, speaking, mutedParticipants, username, currentSong, onJoin, onLeave
 }: VoiceChannelCardProps) {
   const [hovered, setHovered] = useState(false)
 
@@ -96,6 +97,7 @@ export default function VoiceChannelCard({
                   username={p.username}
                   size={48}
                   speaking={speaking.has(p.username)}
+                  muted={mutedParticipants.has(p.username)}
                 />
                 <span style={{
                   fontSize: 9, fontWeight: 500,

@@ -1,17 +1,18 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useEffect } from 'react'
 import { useLocalParticipant } from '@livekit/components-react'
 import { IconMic, IconMicOff, IconPhoneOff } from '../icons'
 
 interface VoiceControlBarProps {
   voiceRoom: string
+  micMuted: boolean
+  onMicMutedChange: (muted: boolean) => void
   onLeave: () => void
 }
 
-export default function VoiceControlBar({ voiceRoom, onLeave }: VoiceControlBarProps) {
+export default function VoiceControlBar({ voiceRoom, micMuted, onMicMutedChange, onLeave }: VoiceControlBarProps) {
   const { localParticipant } = useLocalParticipant()
-  const [muted, setMuted] = useState(false)
 
   useEffect(() => {
     if (!localParticipant) return
@@ -20,8 +21,9 @@ export default function VoiceControlBar({ voiceRoom, onLeave }: VoiceControlBarP
 
   const toggleMic = async () => {
     if (!localParticipant) return
-    await localParticipant.setMicrophoneEnabled(muted)
-    setMuted(m => !m)
+    const next = !micMuted
+    await localParticipant.setMicrophoneEnabled(!next)
+    onMicMutedChange(next)
   }
 
   return (
@@ -56,18 +58,18 @@ export default function VoiceControlBar({ voiceRoom, onLeave }: VoiceControlBarP
 
         <button
           onClick={toggleMic}
-          title={muted ? 'Mikrofonu Aç' : 'Mikrofonu Kapat'}
+          title={micMuted ? 'Mikrofonu Aç' : 'Mikrofonu Kapat'}
           style={{
             width: 36, height: 36, borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: muted ? 'rgba(239,68,68,0.15)' : 'var(--elevated)',
-            color: muted ? 'var(--red)' : 'var(--accent)',
+            background: micMuted ? 'rgba(239,68,68,0.15)' : 'var(--elevated)',
+            color: micMuted ? 'var(--red)' : 'var(--accent)',
             transition: 'background 150ms, color 150ms',
           }}
-          onMouseEnter={e => { e.currentTarget.style.background = muted ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.1)' }}
-          onMouseLeave={e => { e.currentTarget.style.background = muted ? 'rgba(239,68,68,0.15)' : 'var(--elevated)' }}
+          onMouseEnter={e => { e.currentTarget.style.background = micMuted ? 'rgba(239,68,68,0.25)' : 'rgba(255,255,255,0.1)' }}
+          onMouseLeave={e => { e.currentTarget.style.background = micMuted ? 'rgba(239,68,68,0.15)' : 'var(--elevated)' }}
         >
-          {muted ? <IconMicOff size={16} /> : <IconMic size={16} />}
+          {micMuted ? <IconMicOff size={16} /> : <IconMic size={16} />}
         </button>
 
         <button

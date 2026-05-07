@@ -18,6 +18,7 @@ interface SidePanelProps {
   onlineUsers: string[]
   channelParticipants: Record<string, Participant[]>
   speaking: Set<string>
+  mutedParticipants: Set<string>
   queue: QueueItem[]
   currentSong: QueueItem | null
   volume: number
@@ -38,7 +39,7 @@ interface SidePanelProps {
 
 export default function SidePanel({
   messages, input, onInputChange, onSendMessage, bottomRef, username,
-  onlineUsers, channelParticipants, speaking,
+  onlineUsers, channelParticipants, speaking, mutedParticipants,
   queue, currentSong, volume, isMuted, pausedAt,
   queueInput, setQueueInput, isAdding, isInVoice,
   onAddToQueue, onTogglePlay, onSkip, onRemoveFromQueue, onClearQueue,
@@ -99,6 +100,7 @@ export default function SidePanel({
                 username={user}
                 size={22}
                 speaking={speaking.has(user)}
+                muted={mutedParticipants.has(user)}
               />
             </div>
           ))}

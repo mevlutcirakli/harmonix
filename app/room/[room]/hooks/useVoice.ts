@@ -7,6 +7,7 @@ export function useVoice(username: string) {
   const [isInVoice, setIsInVoice] = useState(false)
   const [liveKitToken, setLiveKitToken] = useState('')
   const [speaking, setSpeaking] = useState<Set<string>>(new Set())
+  const [micMuted, setMicMuted] = useState(false)
   const [screenTrack, setScreenTrack] = useState<MediaStreamTrack | null>(null)
 
   const connectToRoom = async (targetRoom: string, token: string) => {
@@ -20,6 +21,7 @@ export function useVoice(username: string) {
     setLiveKitToken('')
     setVoiceRoom('')
     setSpeaking(new Set())
+    setMicMuted(false)
     setScreenTrack(null)
   }
 
@@ -29,6 +31,8 @@ export function useVoice(username: string) {
     liveKitToken,
     speaking,
     setSpeaking,
+    micMuted,
+    setMicMuted,
     screenTrack,
     setScreenTrack,
     connectToRoom,
