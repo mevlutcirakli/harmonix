@@ -1,261 +1,221 @@
 'use client'
 
-import { useState, useEffect, useRef, useMemo } from 'react'
-import { supabase } from '@/lib/supabase'
+import { useState, useEffect, useRef, useSyncExternalStore, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
-import { use } from 'react'
 import { toast, Toaster } from 'sonner'
-import './room.css'
+import { LiveKitRoom, RoomAudioRenderer } from '@livekit/components-react'
 
-import { ROOMS } from './constants'
-import { playJoinSound, playLeaveSound } from './sounds'
+import { supabase } from '@/lib/supabase'
 import { useChat } from './hooks/useChat'
 import { useVoice } from './hooks/useVoice'
 import { useMusic } from './hooks/useMusic'
-import LeftSidebar from './components/LeftSidebar'
-import ChatArea from './components/ChatArea'
-import RightSidebar from './components/RightSidebar'
-import type { MusicStateRow, QueueItem } from './types'
+import { playJoinSound, playLeaveSound } from './sounds'
+import type { Participant } from './types'
 
-export default function RoomPage({ params }: { params: Promise<{ room: string }> }) {
-  const { room } = use(params)
+import LeftNav from './components/LeftNav'
+import VoiceChannelGrid from './components/VoiceChannelGrid'
+import SidePanel from './components/SidePanel'
+import VoiceControlBar from './components/VoiceControlBar'
+import SpeakerListener from './components/SpeakerListener'
+import VoiceParticipantListener from './components/VoiceParticipantListener'
+import RemoteMuteApplier from './components/RemoteMuteApplier'
+
+export default function RoomPage() {
   const router = useRouter()
 
-  const [textRoom, setTextRoom] = useState(room)
-  const textRoomData = ROOMS.find(r => r.id === textRoom)
-  const textRoomName = textRoomData?.name || textRoom
-
-  const [username] = useState(() =>
-    typeof window !== 'undefined' ? (localStorage.getItem('username') ?? '') : ''
+  const username = useSyncExternalStore(
+    () => () => {},
+    () => localStorage.getItem('username') ?? '',
+    () => '',
   )
 
   useEffect(() => {
     if (!username) router.push('/')
   }, [username, router])
 
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const joiningVoiceRef = useRef(false)
-  const [isFullscreen, setIsFullscreen] = useState(false)
-  const screenContainerRef = useRef<HTMLDivElement>(null)
-  const screenVideoRef = useRef<HTMLVideoElement>(null)
+  const joiningRef = useRef(false)
+  const [remoteParticipants, setRemoteParticipants] = useState<Record<string, Participant[]>>({})
+  const presenceChRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
+  const [presenceReady, setPresenceReady] = useState(false)
+
+  const { messages, input, setInput, onlineUsers, sendMessage, bottomRef } =
+    useChat('genel', username, router)
+
+  const { voiceRoom, isInVoice, liveKitToken, speaking, setSpeaking, connectToRoom, disconnectFromRoom } =
+    useVoice(username)
 
   const {
-    messages,
-    input,
-    setInput,
-    onlineUsers,
-    sendMessage,
-    bottomRef,
-    resetMessages,
-  } = useChat(textRoom, username, router)
+    queue, currentSong, volume, isMuted, pausedAt,
+    queueInput, setQueueInput, isAdding,
+    addToQueue, togglePlay, skip, removeFromQueue,
+    clearQueue, handleVolumeChange, toggleMute, resetOnLeave,
+  } = useMusic(voiceRoom || 'genel', username, isInVoice)
 
-  const {
-    voiceRoom,
-    isInVoice,
-    liveKitToken,
-    speaking,
-    setSpeaking,
-    voiceParticipants,
-    voiceParticipantsRef,
-    setVoiceParticipants,
-    screenTrack,
-    setScreenTrack,
-    connectToRoom,
-    disconnectFromRoom,
-  } = useVoice(username)
-
-  const {
-    queue,
-    isHost,
-    isHostRef,
-    hostUsername,
-    isPlaying,
-    volume,
-    queueInput,
-    setQueueInput,
-    isAddingPlaylist,
-    currentSong,
-    addToQueue,
-    addPlaylistToQueue,
-    clearQueue,
-    removeFromQueue,
-    handlePrev,
-    handleNext,
-    togglePlay,
-    handleVolumeChange,
-    initFromJoin,
-    resetOnLeave,
-  } = useMusic(voiceRoom, username, isInVoice)
-
-  const mergedUsers = useMemo(
-    () => [...new Set([...onlineUsers, ...voiceParticipants])],
-    [onlineUsers, voiceParticipants]
-  )
-
+  // Subscribe to presence channel as observer. Only sync events feed remoteParticipants.
   useEffect(() => {
-    if (!screenTrack || !screenVideoRef.current) return
-    const stream = new MediaStream([screenTrack])
-    screenVideoRef.current.srcObject = stream
-  }, [screenTrack])
+    if (!username) return
 
-  const toggleFullscreen = async () => {
-    if (!screenContainerRef.current) return
-    const el = screenContainerRef.current as HTMLDivElement & {
-      webkitRequestFullscreen?: () => Promise<void>
-    }
-    if (!document.fullscreenElement) {
-      if (el.requestFullscreen) await el.requestFullscreen()
-      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen()
-      setIsFullscreen(true)
-    } else {
-      await document.exitFullscreen()
-      setIsFullscreen(false)
-    }
-  }
+    type PresenceRow = { username: string; voiceRoom: string }
+    const ch = supabase.channel('hx-voice-presence', {
+      config: { presence: { key: username } },
+    })
 
-  useEffect(() => {
-    const handler = () => setIsFullscreen(!!document.fullscreenElement)
-    document.addEventListener('fullscreenchange', handler)
-    document.addEventListener('webkitfullscreenchange', handler)
+    ch.on('presence', { event: 'sync' }, () => {
+      const state = ch.presenceState<PresenceRow>()
+      const map: Record<string, Participant[]> = {}
+      Object.values(state).flat().forEach(p => {
+        if (!p.voiceRoom || p.username === username) return
+        if (!map[p.voiceRoom]) map[p.voiceRoom] = []
+        if (!map[p.voiceRoom].find(u => u.username === p.username))
+          map[p.voiceRoom].push({ username: p.username })
+      })
+      setRemoteParticipants(map)
+    })
+    .subscribe(status => {
+      setPresenceReady(status === 'SUBSCRIBED')
+    })
+
+    presenceChRef.current = ch
     return () => {
-      document.removeEventListener('fullscreenchange', handler)
-      document.removeEventListener('webkitfullscreenchange', handler)
+      supabase.removeChannel(ch)
+      presenceChRef.current = null
+      setPresenceReady(false)
     }
-  }, [])
+  }, [username])
 
-  const switchTextRoom = (id: string) => {
-    setTextRoom(id)
-    resetMessages()
-    setSidebarOpen(false)
-  }
+  // Declaratively sync my own presence with my local voice state.
+  useEffect(() => {
+    if (!presenceReady || !username) return
+    const ch = presenceChRef.current
+    if (!ch) return
+
+    if (isInVoice && voiceRoom) {
+      ch.track({ username, voiceRoom })
+    } else {
+      ch.untrack()
+    }
+  }, [presenceReady, isInVoice, voiceRoom, username])
+
+  // Compose final map: remote users from presence + myself from local state.
+  const channelParticipants = useMemo(() => {
+    const map: Record<string, Participant[]> = {}
+    for (const [room, ps] of Object.entries(remoteParticipants)) {
+      map[room] = [...ps]
+    }
+    if (isInVoice && voiceRoom) {
+      if (!map[voiceRoom]) map[voiceRoom] = []
+      if (!map[voiceRoom].find(u => u.username === username))
+        map[voiceRoom].push({ username })
+    }
+    return map
+  }, [remoteParticipants, isInVoice, voiceRoom, username])
 
   const handleJoinVoice = async (targetRoom: string) => {
-    if (isInVoice && voiceRoom === targetRoom) { handleLeaveVoice(); return }
-    if (joiningVoiceRef.current) return
-    joiningVoiceRef.current = true
-    try {
-      const [tokenRes, { data: queueData }, { data: musicState }] = await Promise.all([
-        fetch(`/api/livekit-token?room=${targetRoom}&username=${username}`).then(r => r.json()),
-        supabase.from('queue').select('*').eq('room_id', targetRoom).order('added_at', { ascending: true }),
-        supabase.from('music_state').select('*').eq('room_id', targetRoom).maybeSingle(),
-      ])
-      const { token } = tokenRes
+    if (joiningRef.current) return
+    joiningRef.current = true
 
-      let becomeHost = false
-      if (!musicState || !musicState.host_username) {
-        await supabase.from('music_state').upsert({
-          room_id: targetRoom,
-          host_username: username,
-        }, { onConflict: 'room_id' })
-        becomeHost = true
+    try {
+      if (isInVoice) {
+        await disconnectFromRoom()
+        resetOnLeave()
       }
 
-      initFromJoin(queueData as QueueItem[] ?? [], musicState as MusicStateRow | null, becomeHost, username)
+      const { token } = await fetch(
+        `/api/livekit-token?room=${targetRoom}&username=${username}`
+      ).then(r => r.json())
       await connectToRoom(targetRoom, token)
       playJoinSound()
-      setSidebarOpen(false)
     } catch {
       toast.error('Ses kanalına bağlanılamadı')
     } finally {
-      joiningVoiceRef.current = false
+      joiningRef.current = false
     }
   }
 
   const handleLeaveVoice = async () => {
-    if (isHostRef.current && voiceRoom) {
-      const others = voiceParticipantsRef.current.filter((p: string) => p !== username)
-      const nextHost = others[0] || null
-      // Only update the host field; never touch is_playing or updated_at here.
-      // is_playing keeps ticking (live sync). updated_at stays at the last pause moment
-      // so calcSeek can compute the frozen position on rejoin when is_playing=false.
-      await supabase.from('music_state').update({
-        host_username: nextHost,
-      }).eq('room_id', voiceRoom)
-    }
     playLeaveSound()
     await disconnectFromRoom()
     resetOnLeave()
   }
 
+  if (!username) return null
+
   return (
-    <div style={{ display: 'flex', height: '100vh', overflow: 'hidden', backgroundColor: '#080808', color: '#f0f0f0' }}>
+    <div style={{
+      display: 'flex',
+      height: '100vh',
+      overflow: 'hidden',
+      background: 'var(--bg)',
+      color: 'var(--text-1)',
+    }}>
       <Toaster position="bottom-right" theme="dark" richColors />
 
-      {/* Hidden YouTube player */}
-      <div id="yt-player-container" style={{ position: 'fixed', top: -9999, left: -9999, width: 1, height: 1, overflow: 'hidden' }}>
-        <div id="yt-player" />
-      </div>
+      <div id="yt-player" style={{ position: 'fixed', top: -9999, left: -9999, width: 1, height: 1 }} />
 
-      {/* Mobile overlay */}
-      {sidebarOpen && (
-        <div
-          className="fixed inset-0 z-40 md:hidden"
-          style={{ backgroundColor: 'rgba(0,0,0,0.7)' }}
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      <LeftSidebar
-        sidebarOpen={sidebarOpen}
-        textRoom={textRoom}
+      <LeftNav
         voiceRoom={voiceRoom}
         isInVoice={isInVoice}
-        voiceParticipants={voiceParticipants}
-        speaking={speaking}
+        channelParticipants={channelParticipants}
         username={username}
-        hostUsername={hostUsername}
-        isHost={isHost}
-        liveKitToken={liveKitToken}
-        onSwitchTextRoom={switchTextRoom}
         onJoinVoice={handleJoinVoice}
         onLeaveVoice={handleLeaveVoice}
         onLogout={() => { localStorage.removeItem('username'); router.push('/') }}
-        setSpeaking={setSpeaking}
-        setVoiceParticipants={setVoiceParticipants}
-        setScreenTrack={setScreenTrack}
       />
 
-      <ChatArea
-        textRoomName={textRoomName}
+      <VoiceChannelGrid
         voiceRoom={voiceRoom}
         isInVoice={isInVoice}
-        onSidebarOpen={() => setSidebarOpen(true)}
-        onlineUsers={onlineUsers}
-        currentSong={currentSong}
-        isPlaying={isPlaying}
-        volume={volume}
-        onTogglePlay={togglePlay}
-        onPrev={handlePrev}
-        onNext={handleNext}
-        onVolumeChange={handleVolumeChange}
-        screenTrack={screenTrack}
-        screenContainerRef={screenContainerRef}
-        screenVideoRef={screenVideoRef}
-        isFullscreen={isFullscreen}
-        onToggleFullscreen={toggleFullscreen}
-        messages={messages}
+        channelParticipants={channelParticipants}
+        speaking={speaking}
         username={username}
+        currentSong={currentSong}
+        onJoinVoice={handleJoinVoice}
+        onLeaveVoice={handleLeaveVoice}
+      />
+
+      <SidePanel
+        messages={messages}
         input={input}
         onInputChange={setInput}
         onSendMessage={sendMessage}
         bottomRef={bottomRef}
-      />
-
-      <RightSidebar
-        isInVoice={isInVoice}
+        username={username}
+        onlineUsers={onlineUsers}
+        channelParticipants={channelParticipants}
+        speaking={speaking}
         queue={queue}
+        currentSong={currentSong}
+        volume={volume}
+        isMuted={isMuted}
+        pausedAt={pausedAt}
         queueInput={queueInput}
-        onQueueInputChange={setQueueInput}
+        setQueueInput={setQueueInput}
+        isAdding={isAdding}
+        isInVoice={isInVoice}
         onAddToQueue={addToQueue}
-        onAddPlaylist={addPlaylistToQueue}
+        onTogglePlay={togglePlay}
+        onSkip={skip}
         onRemoveFromQueue={removeFromQueue}
         onClearQueue={clearQueue}
-        isAddingPlaylist={isAddingPlaylist}
-        users={mergedUsers}
-        speaking={speaking}
-        currentUser={username}
-        hostUsername={hostUsername}
+        onVolumeChange={handleVolumeChange}
+        onToggleMute={toggleMute}
       />
+
+      {isInVoice && liveKitToken && (
+        <LiveKitRoom
+          audio={true}
+          token={liveKitToken}
+          serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+          connect={true}
+          style={{ display: 'contents' }}
+        >
+          <RoomAudioRenderer />
+          <SpeakerListener onSpeakersChange={setSpeaking} />
+          <VoiceParticipantListener />
+          <RemoteMuteApplier locallyMuted={new Set()} />
+          <VoiceControlBar voiceRoom={voiceRoom} onLeave={handleLeaveVoice} />
+        </LiveKitRoom>
+      )}
     </div>
   )
 }

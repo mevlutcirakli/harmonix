@@ -1,19 +1,3 @@
-declare global {
-  interface Window {
-    YT: { Player: new (id: string, opts: object) => YTPlayerInstance; PlayerState: Record<string, number> }
-    onYouTubeIframeAPIReady: () => void
-  }
-}
-
-export interface YTPlayerInstance {
-  playVideo: () => void
-  pauseVideo: () => void
-  setVolume: (v: number) => void
-  seekTo: (seconds: number, allowSeekAhead: boolean) => void
-  getCurrentTime: () => number
-  destroy: () => void
-}
-
 export interface Message {
   id: string
   username: string
@@ -32,11 +16,12 @@ export interface QueueItem {
   started_at: string | null
 }
 
-export interface MusicStateRow {
-  room_id: string
-  host_username: string | null
-  is_playing: boolean
-  current_video_id: string | null
-  started_at: string | null
-  updated_at: string | null
+export interface MusicBroadcast {
+  type: 'pause' | 'resume' | 'skip'
+  paused_at?: number
+  seek_to?: number
+}
+
+export interface Participant {
+  username: string
 }
