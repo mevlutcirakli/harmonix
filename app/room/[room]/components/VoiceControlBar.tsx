@@ -9,9 +9,11 @@ interface VoiceControlBarProps {
   micMuted: boolean
   onMicMutedChange: (muted: boolean) => void
   onLeave: () => void
+  isMobile?: boolean
+  mobileNavH?: number
 }
 
-export default function VoiceControlBar({ voiceRoom, micMuted, onMicMutedChange, onLeave }: VoiceControlBarProps) {
+export default function VoiceControlBar({ voiceRoom, micMuted, onMicMutedChange, onLeave, isMobile, mobileNavH = 56 }: VoiceControlBarProps) {
   const { localParticipant } = useLocalParticipant()
 
   useEffect(() => {
@@ -29,9 +31,9 @@ export default function VoiceControlBar({ voiceRoom, micMuted, onMicMutedChange,
   return (
     <div style={{
       position: 'fixed',
-      bottom: 24,
-      left: 75,
-      right: 300,
+      bottom: isMobile ? mobileNavH + 8 : 24,
+      left: isMobile ? 8 : 75,
+      right: isMobile ? 8 : 300,
       zIndex: 100,
       display: 'flex',
       justifyContent: 'center',

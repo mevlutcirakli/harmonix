@@ -36,6 +36,7 @@ interface SidePanelProps {
   onClearQueue: () => void
   onVolumeChange: (v: number) => void
   onToggleMute: () => void
+  forcedTab?: 'chat' | 'music'
 }
 
 export default function SidePanel({
@@ -44,9 +45,10 @@ export default function SidePanel({
   queue, currentSong, volume, isMuted, pausedAt,
   queueInput, setQueueInput, isAdding, isInVoice,
   onAddToQueue, onAddPlaylistToQueue, onTogglePlay, onSkip, onRemoveFromQueue, onClearQueue,
-  onVolumeChange, onToggleMute,
+  onVolumeChange, onToggleMute, forcedTab,
 }: SidePanelProps) {
   const [tab, setTab] = useState<'chat' | 'music'>('chat')
+  const activeTab = forcedTab ?? tab
 
   const voiceParticipants = Object.values(channelParticipants).flat()
   const allUsers = [...new Set([...onlineUsers, ...voiceParticipants.map(p => p.username)])]
@@ -69,8 +71,8 @@ export default function SidePanel({
               flex: 1, height: 46,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               fontSize: 12, fontWeight: 600,
-              color: tab === t ? 'var(--text-1)' : 'var(--text-3)',
-              borderBottom: tab === t ? '2px solid var(--accent)' : '2px solid transparent',
+              color: activeTab === t ? 'var(--text-1)' : 'var(--text-3)',
+              borderBottom: activeTab === t ? '2px solid var(--accent)' : '2px solid transparent',
               marginBottom: -1,
               transition: 'color 150ms, border-color 150ms',
             }}
@@ -115,7 +117,7 @@ export default function SidePanel({
 
       {/* Tab content */}
       <div style={{ flex: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-        {tab === 'chat' ? (
+        {activeTab === 'chat' ? (
           <ChatPanel
             messages={messages}
             input={input}

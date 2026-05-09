@@ -20,6 +20,9 @@ import SpeakerListener from './components/SpeakerListener'
 import VoiceParticipantListener from './components/VoiceParticipantListener'
 import RemoteMuteApplier from './components/RemoteMuteApplier'
 import MuteStateListener from './components/MuteStateListener'
+import { IconSpeaker, IconChat, IconMusic, IconLogOut } from './icons'
+
+const MOBILE_NAV_H = 56
 
 export default function RoomPage() {
   const router = useRouter()
@@ -150,7 +153,29 @@ export default function RoomPage() {
     resetOnLeave()
   }
 
+  const [isMobile, setIsMobile] = useState(false)
+  const [mobilePanel, setMobilePanel] = useState<'channels' | 'chat' | 'music'>('channels')
+
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768)
+    check()
+    window.addEventListener('resize', check)
+    return () => window.removeEventListener('resize', check)
+  }, [])
+
   if (!username) return null
+
+  const sidePanelProps = {
+    messages, input, onInputChange: setInput, onSendMessage: sendMessage,
+    bottomRef, username, onlineUsers, channelParticipants, speaking, mutedParticipants,
+    queue, currentSong, volume, isMuted, pausedAt,
+    queueInput, setQueueInput, isAdding, isInVoice,
+    onAddToQueue: addToQueue, onAddPlaylistToQueue: addPlaylistToQueue,
+    onTogglePlay: togglePlay, onSkip: skip, onRemoveFromQueue: removeFromQueue,
+    onClearQueue: clearQueue, onVolumeChange: handleVolumeChange, onToggleMute: toggleMute,
+  }
+
+  const voiceBarBottom = isInVoice ? MOBILE_NAV_H + 60 : MOBILE_NAV_H
 
   return (
     <div style={{
@@ -161,60 +186,55 @@ export default function RoomPage() {
       color: 'var(--text-1)',
     }}>
       <Toaster position="bottom-right" theme="dark" richColors />
-
       <div id="yt-player" style={{ position: 'fixed', top: -9999, left: -9999, width: 1, height: 1 }} />
 
-      <LeftNav
-        voiceRoom={voiceRoom}
-        isInVoice={isInVoice}
-        channelParticipants={channelParticipants}
-        username={username}
-        onJoinVoice={handleJoinVoice}
-        onLeaveVoice={handleLeaveVoice}
-        onLogout={() => { localStorage.removeItem('username'); router.push('/') }}
-      />
+      {/* Sol nav — yalnızca masaüstü */}
+      {!isMobile && (
+        <LeftNav
+          voiceRoom={voiceRoom}
+          isInVoice={isInVoice}
+          channelParticipants={channelParticipants}
+          username={username}
+          onJoinVoice={handleJoinVoice}
+          onLeaveVoice={handleLeaveVoice}
+          onLogout={() => { localStorage.removeItem('username'); router.push('/') }}
+        />
+      )}
 
-      <VoiceChannelGrid
-        voiceRoom={voiceRoom}
-        isInVoice={isInVoice}
-        channelParticipants={channelParticipants}
-        speaking={speaking}
-        mutedParticipants={mutedParticipants}
-        username={username}
-        currentSong={currentSong}
-        onJoinVoice={handleJoinVoice}
-        onLeaveVoice={handleLeaveVoice}
-      />
+      {/* Ses kanalları — masaüstünde her zaman, mobilde yalnızca "kanallar" sekmesinde */}
+      {(!isMobile || mobilePanel === 'channels') && (
+        <VoiceChannelGrid
+          voiceRoom={voiceRoom}
+          isInVoice={isInVoice}
+          channelParticipants={channelParticipants}
+          speaking={speaking}
+          mutedParticipants={mutedParticipants}
+          username={username}
+          currentSong={currentSong}
+          onJoinVoice={handleJoinVoice}
+          onLeaveVoice={handleLeaveVoice}
+          extraBottomPadding={isMobile ? (isInVoice ? MOBILE_NAV_H + 52 : MOBILE_NAV_H + 16) : 0}
+        />
+      )}
 
-      <SidePanel
-        messages={messages}
-        input={input}
-        onInputChange={setInput}
-        onSendMessage={sendMessage}
-        bottomRef={bottomRef}
-        username={username}
-        onlineUsers={onlineUsers}
-        channelParticipants={channelParticipants}
-        speaking={speaking}
-        mutedParticipants={mutedParticipants}
-        queue={queue}
-        currentSong={currentSong}
-        volume={volume}
-        isMuted={isMuted}
-        pausedAt={pausedAt}
-        queueInput={queueInput}
-        setQueueInput={setQueueInput}
-        isAdding={isAdding}
-        isInVoice={isInVoice}
-        onAddToQueue={addToQueue}
-        onAddPlaylistToQueue={addPlaylistToQueue}
-        onTogglePlay={togglePlay}
-        onSkip={skip}
-        onRemoveFromQueue={removeFromQueue}
-        onClearQueue={clearQueue}
-        onVolumeChange={handleVolumeChange}
-        onToggleMute={toggleMute}
-      />
+      {/* Yan panel — masaüstünde sabit, mobilde tam ekran kaplayan overlay */}
+      {isMobile ? (
+        mobilePanel !== 'channels' && (
+          <div style={{
+            position: 'fixed', top: 0, left: 0, right: 0,
+            bottom: voiceBarBottom,
+            zIndex: 50, display: 'flex', flexDirection: 'column',
+            background: 'var(--surface)',
+          }}>
+            <SidePanel
+              {...sidePanelProps}
+              forcedTab={mobilePanel === 'music' ? 'music' : 'chat'}
+            />
+          </div>
+        )
+      ) : (
+        <SidePanel {...sidePanelProps} />
+      )}
 
       {isInVoice && liveKitToken && (
         <LiveKitRoom
@@ -234,8 +254,60 @@ export default function RoomPage() {
             micMuted={micMuted}
             onMicMutedChange={setMicMuted}
             onLeave={handleLeaveVoice}
+            isMobile={isMobile}
+            mobileNavH={MOBILE_NAV_H}
           />
         </LiveKitRoom>
+      )}
+
+      {/* Mobil alt navigasyon çubuğu */}
+      {isMobile && (
+        <nav style={{
+          position: 'fixed', bottom: 0, left: 0, right: 0,
+          height: MOBILE_NAV_H,
+          background: 'var(--surface)',
+          borderTop: '1px solid var(--border)',
+          display: 'flex', alignItems: 'stretch',
+          zIndex: 200,
+        }}>
+          {([
+            { id: 'channels' as const, label: 'Kanallar', icon: <IconSpeaker size={20} /> },
+            { id: 'chat'     as const, label: 'Sohbet',   icon: <IconChat size={20} /> },
+            { id: 'music'    as const, label: 'Müzik',    icon: <IconMusic size={20} /> },
+          ]).map(item => (
+            <button
+              key={item.id}
+              onClick={() => setMobilePanel(item.id)}
+              style={{
+                flex: 1,
+                display: 'flex', flexDirection: 'column',
+                alignItems: 'center', justifyContent: 'center',
+                gap: 3, fontSize: 10, fontWeight: 600,
+                color: mobilePanel === item.id ? 'var(--accent)' : 'var(--text-3)',
+                transition: 'color 150ms',
+              }}
+            >
+              {item.icon}
+              {item.label}
+            </button>
+          ))}
+
+          <button
+            onClick={() => { localStorage.removeItem('username'); router.push('/') }}
+            style={{
+              width: 56,
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: 3, fontSize: 10, fontWeight: 600,
+              color: 'var(--text-3)',
+              borderLeft: '1px solid var(--border)',
+              transition: 'color 150ms',
+            }}
+          >
+            <IconLogOut size={18} />
+            Çıkış
+          </button>
+        </nav>
       )}
     </div>
   )

@@ -14,11 +14,12 @@ interface VoiceChannelGridProps {
   currentSong: QueueItem | null
   onJoinVoice: (roomId: string) => void
   onLeaveVoice: () => void
+  extraBottomPadding?: number
 }
 
 export default function VoiceChannelGrid({
   voiceRoom, isInVoice, channelParticipants, speaking, mutedParticipants, username, currentSong,
-  onJoinVoice, onLeaveVoice,
+  onJoinVoice, onLeaveVoice, extraBottomPadding = 0,
 }: VoiceChannelGridProps) {
   return (
     <div style={{
@@ -26,7 +27,7 @@ export default function VoiceChannelGrid({
       height: '100%',
       overflowY: 'auto',
       background: 'var(--bg)',
-      padding: '32px 28px',
+      padding: `32px 28px ${32 + extraBottomPadding}px`,
       display: 'flex',
       flexDirection: 'column',
       gap: 28,
