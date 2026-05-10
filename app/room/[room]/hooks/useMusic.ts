@@ -39,7 +39,7 @@ interface YTPlayerInstance {
 
 export function useMusic(roomId: string, username: string, isInVoice: boolean) {
   const [queue, setQueue] = useState<QueueItem[]>([])
-  const [volume, setVolume] = useState(30)
+  const [volume, setVolume] = useState(80)
   const [isMuted, setIsMuted] = useState(false)
   const [queueInput, setQueueInput] = useState('')
   const [isAdding, setIsAdding] = useState(false)
@@ -204,15 +204,6 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
     bcRef.current?.send({ type: 'broadcast', event: 'music', payload })
   }, [])
 
-  const advanceQueueIfEmpty = useCallback(async () => {
-    const { data } = await supabase.from('queue')
-      .select('id, started_at').eq('room_id', roomId)
-      .order('added_at', { ascending: true })
-    if (!data?.length) return
-    if (data.some(q => q.started_at !== null)) return
-    await supabase.from('queue').update({ started_at: new Date().toISOString() }).eq('id', data[0].id)
-  }, [roomId])
-
   const addToQueue = async (input: string) => {
     if (!input.trim()) return
     setIsAdding(true)
@@ -226,15 +217,17 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
       if (!res.ok) { toast.error('Video bulunamadı'); return }
       const oEmbed = await res.json()
 
+      const hasPlaying = currentSongRef.current !== null
+      const hasPending = queueRef.current.some(q => q.started_at === null)
+
       await supabase.from('queue').insert({
         room_id: roomId,
         video_id: videoId,
         title: oEmbed.title,
         thumbnail: `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`,
         added_by: username,
-        started_at: null,
+        started_at: (!hasPlaying && !hasPending) ? new Date().toISOString() : null,
       })
-      await advanceQueueIfEmpty()
       setQueueInput('')
     } catch {
       toast.error('Şarkı eklenemedi')
@@ -267,6 +260,8 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
 
       toast.loading(`${items.length} şarkı ekleniyor...`, { id: toastId })
 
+      const hasPlaying = currentSongRef.current !== null
+      const hasPending = queueRef.current.some(q => q.started_at === null)
       const baseTime = Date.now()
 
       const insertData = items.map((item, idx) => ({
@@ -276,7 +271,7 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
         thumbnail: item.thumbnail,
         added_by: username,
         added_at: new Date(baseTime + idx * 10).toISOString(),
-        started_at: null,
+        started_at: (!hasPlaying && !hasPending && idx === 0) ? new Date().toISOString() : null,
       }))
 
       const BATCH = 50
@@ -288,7 +283,6 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
         }
       }
 
-      await advanceQueueIfEmpty()
       toast.success(`"${title}" — ${items.length} şarkı eklendi`, { id: toastId })
       setQueueInput('')
     } catch {
