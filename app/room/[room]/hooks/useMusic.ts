@@ -205,16 +205,12 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
   }, [])
 
   const advanceQueueIfEmpty = useCallback(async () => {
-    const { data: playing } = await supabase.from('queue')
-      .select('id').eq('room_id', roomId).not('started_at', 'is', null).limit(1)
-    if (!playing?.length) {
-      const { data: first } = await supabase.from('queue')
-        .select('id').eq('room_id', roomId).is('started_at', null)
-        .order('added_at', { ascending: true }).limit(1)
-      if (first?.[0]) {
-        await supabase.from('queue').update({ started_at: new Date().toISOString() }).eq('id', first[0].id)
-      }
-    }
+    const { data } = await supabase.from('queue')
+      .select('id, started_at').eq('room_id', roomId)
+      .order('added_at', { ascending: true })
+    if (!data?.length) return
+    if (data.some(q => q.started_at !== null)) return
+    await supabase.from('queue').update({ started_at: new Date().toISOString() }).eq('id', data[0].id)
   }, [roomId])
 
   const addToQueue = async (input: string) => {
