@@ -23,7 +23,8 @@ export default function ParticipantAvatar({ username, size, speaking, muted }: P
           overflow: 'hidden',
           border: speaking ? '2px solid var(--accent)' : '2px solid transparent',
           animation: speaking ? 'speaking-pulse 1.5s ease-in-out infinite' : 'none',
-          transition: 'border-color 200ms ease',
+          transition: 'border-color 50ms ease',
+          willChange: speaking ? 'border-color, box-shadow' : undefined,
           userSelect: 'none',
           background: 'var(--surface)',
         }}
