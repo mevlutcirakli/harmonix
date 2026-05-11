@@ -75,7 +75,7 @@ export default function RoomPage() {
       config: { presence: { key: username } },
     })
 
-    ch.on('presence', { event: 'sync' }, () => {
+    const recomputeRemote = () => {
       const state = ch.presenceState<PresenceRow>()
       const map: Record<string, Participant[]> = {}
       Object.values(state).flat().forEach(p => {
@@ -85,10 +85,14 @@ export default function RoomPage() {
           map[p.voiceRoom].push({ username: p.username })
       })
       setRemoteParticipants(map)
-    })
-    .subscribe(status => {
-      setPresenceReady(status === 'SUBSCRIBED')
-    })
+    }
+
+    ch.on('presence', { event: 'sync' }, recomputeRemote)
+      .on('presence', { event: 'join' }, recomputeRemote)
+      .on('presence', { event: 'leave' }, recomputeRemote)
+      .subscribe(status => {
+        setPresenceReady(status === 'SUBSCRIBED')
+      })
 
     presenceChRef.current = ch
     return () => {

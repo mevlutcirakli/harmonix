@@ -27,12 +27,15 @@ export function useChat(textRoom: string, username: string, router: Router) {
       .subscribe()
 
     const presenceChannel = supabase.channel(`presence-${textRoom}`)
+    const recomputeOnline = () => {
+      const state = presenceChannel.presenceState()
+      const users = Object.values(state).flat().map((p) => (p as unknown as { username: string }).username).filter(Boolean)
+      setOnlineUsers([...new Set(users)])
+    }
     presenceChannel
-      .on('presence', { event: 'sync' }, () => {
-        const state = presenceChannel.presenceState()
-        const users = Object.values(state).flat().map((p) => (p as unknown as { username: string }).username).filter(Boolean)
-        setOnlineUsers([...new Set(users)])
-      })
+      .on('presence', { event: 'sync' }, recomputeOnline)
+      .on('presence', { event: 'join' }, recomputeOnline)
+      .on('presence', { event: 'leave' }, recomputeOnline)
       .subscribe(async (status) => {
         if (status === 'SUBSCRIBED') await presenceChannel.track({ username })
       })

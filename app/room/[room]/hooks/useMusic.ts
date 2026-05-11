@@ -56,7 +56,7 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
   const volumeRef = useRef(80)
   const isMutedRef = useRef(false)
 
-  const currentSong = queue.find(q => q.started_at !== null) ?? null
+  const currentSong = queue.find(q => q.started_at !== null) ?? queue[0] ?? null
 
   useEffect(() => { currentSongRef.current = currentSong }, [currentSong])
   useEffect(() => { queueRef.current = queue }, [queue])
@@ -85,7 +85,9 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
   useEffect(() => {
     if (!isInVoice) { bcRef.current = null; return }
 
-    const bc = supabase.channel(`music-bc-${roomId}`)
+    const bc = supabase.channel(`music-bc-${roomId}`, {
+      config: { broadcast: { self: true } },
+    })
       .on('broadcast', { event: 'music' }, ({ payload }: { payload: MusicBroadcast }) => {
         if (payload.type === 'pause') {
           p()?.pauseVideo()
@@ -97,9 +99,14 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
           setPausedAt(null)
         }
         if (payload.type === 'skip') {
-          p()?.stopVideo()
-          syncedRef.current = ''
           setPausedAt(null)
+          if (payload.removed_id || payload.next_id) {
+            setQueue(prev => prev
+              .filter(q => q.id !== payload.removed_id)
+              .map(q => q.id === payload.next_id && payload.next_started_at
+                ? { ...q, started_at: payload.next_started_at! }
+                : q))
+          }
         }
       })
     bc.subscribe()
@@ -113,19 +120,19 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
 
   // Song-end handler via ref to avoid stale closures
   const handleSongEndRef = useRef<(() => Promise<void>) | undefined>(undefined)
-  handleSongEndRef.current = async () => {
-    const cs = currentSongRef.current
-    const q = queueRef.current
-    if (!cs) return
-    await supabase.from('queue').delete().eq('id', cs.id)
-    const next = q.find(qi => qi.id !== cs.id && qi.started_at === null)
-    if (next) {
-      await supabase.from('queue')
-        .update({ started_at: new Date().toISOString() })
-        .eq('id', next.id)
+    handleSongEndRef.current = async () => {
+      const cs = currentSongRef.current
+      const q = queueRef.current
+      if (!cs) return
+      await supabase.from('queue').delete().eq('id', cs.id)
+      const next = q.find(qi => qi.id !== cs.id && qi.started_at === null)
+      if (next) {
+        await supabase.from('queue')
+          .update({ started_at: new Date().toISOString() })
+          .eq('id', next.id)
+      }
+      syncedRef.current = ''
     }
-    syncedRef.current = ''
-  }
 
   // YouTube IFrame API init — runs once
   useEffect(() => {
@@ -183,10 +190,9 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
     if (syncedRef.current === currentSong.id) return
     syncedRef.current = currentSong.id
 
-    const seekSeconds = Math.max(
-      0,
-      (Date.now() - new Date(currentSong.started_at!).getTime()) / 1000
-    )
+    const seekSeconds = currentSong.started_at
+      ? Math.max(0, (Date.now() - new Date(currentSong.started_at).getTime()) / 1000)
+      : 0
 
     const load = (attempts = 0) => {
       const player = p()
@@ -295,7 +301,9 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
   const togglePlay = () => {
     if (!currentSong) return
     if (pausedAt !== null) {
-      const seek = Math.max(0, (pausedAt - new Date(currentSong.started_at!).getTime()) / 1000)
+      const seek = currentSong.started_at
+        ? Math.max(0, (pausedAt - new Date(currentSong.started_at).getTime()) / 1000)
+        : 0
       broadcastMusic({ type: 'resume', seek_to: seek })
     } else {
       broadcastMusic({ type: 'pause', paused_at: Date.now() })
@@ -304,13 +312,28 @@ export function useMusic(roomId: string, username: string, isInVoice: boolean) {
 
   const skip = async () => {
     if (!currentSong) return
-    broadcastMusic({ type: 'skip' })
-    await supabase.from('queue').delete().eq('id', currentSong.id)
-    const next = queue.find(q => q.id !== currentSong.id && q.started_at === null)
-    if (next) {
+    const removedId = currentSong.id
+    const nextItem = queue.find(q => q.id !== removedId && q.started_at === null)
+    const nextStartedAt = nextItem ? new Date().toISOString() : undefined
+
+    setQueue(prev => prev
+      .filter(q => q.id !== removedId)
+      .map(q => q.id === nextItem?.id && nextStartedAt
+        ? { ...q, started_at: nextStartedAt }
+        : q))
+
+    broadcastMusic({
+      type: 'skip',
+      removed_id: removedId,
+      next_id: nextItem?.id,
+      next_started_at: nextStartedAt,
+    })
+
+    await supabase.from('queue').delete().eq('id', removedId)
+    if (nextItem && nextStartedAt) {
       await supabase.from('queue')
-        .update({ started_at: new Date().toISOString() })
-        .eq('id', next.id)
+        .update({ started_at: nextStartedAt })
+        .eq('id', nextItem.id)
     }
   }
 

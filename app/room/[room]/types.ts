@@ -20,6 +20,9 @@ export interface MusicBroadcast {
   type: 'pause' | 'resume' | 'skip'
   paused_at?: number
   seek_to?: number
+  removed_id?: string
+  next_id?: string
+  next_started_at?: string
 }
 
 export interface Participant {
