@@ -1,12 +1,17 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRoomContext } from '@livekit/components-react'
+import { useRoomContext, useParticipants } from '@livekit/components-react'
 import { RoomEvent } from 'livekit-client'
 import { playJoinSound, playLeaveSound } from '../sounds'
 
-export default function VoiceParticipantListener() {
+interface Props {
+  onParticipantsChange?: (usernames: string[]) => void
+}
+
+export default function VoiceParticipantListener({ onParticipantsChange }: Props) {
   const room = useRoomContext()
+  const participants = useParticipants()
 
   useEffect(() => {
     if (!room) return
@@ -19,6 +24,11 @@ export default function VoiceParticipantListener() {
       room.off(RoomEvent.ParticipantDisconnected, handleLeave)
     }
   }, [room])
+
+  useEffect(() => {
+    if (!onParticipantsChange) return
+    onParticipantsChange(participants.map(p => p.identity))
+  }, [participants, onParticipantsChange])
 
   return null
 }

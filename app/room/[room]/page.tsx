@@ -42,6 +42,7 @@ export default function RoomPage() {
   const presenceChRef = useRef<ReturnType<typeof supabase.channel> | null>(null)
   const [presenceReady, setPresenceReady] = useState(false)
   const [remoteMuted, setRemoteMuted] = useState<Set<string>>(new Set())
+  const [liveKitParticipants, setLiveKitParticipants] = useState<string[]>([])
 
   const { messages, input, setInput, onlineUsers, sendMessage, bottomRef } =
     useChat('genel', username, router)
@@ -115,19 +116,40 @@ export default function RoomPage() {
     }
   }, [presenceReady, isInVoice, voiceRoom, username])
 
+  // Periodic presence resync. Realtime can drop a sync packet, leaving other
+  // clients with a stale view (user is heard via LiveKit but missing from the
+  // avatar list). Re-tracking every 15s heals these gaps.
+  useEffect(() => {
+    if (!presenceReady || !username || !isInVoice || !voiceRoom) return
+    const ch = presenceChRef.current
+    if (!ch) return
+    const id = setInterval(() => {
+      ch.track({ username, voiceRoom })
+    }, 15000)
+    return () => clearInterval(id)
+  }, [presenceReady, isInVoice, voiceRoom, username])
+
   // Compose final map: remote users from presence + myself from local state.
+  // For the currently joined voice room, prefer LiveKit's participant list as
+  // source of truth (presence can miss sync packets; LiveKit reflects who can
+  // actually talk in this room).
   const channelParticipants = useMemo(() => {
     const map: Record<string, Participant[]> = {}
     for (const [room, ps] of Object.entries(remoteParticipants)) {
       map[room] = [...ps]
     }
     if (isInVoice && voiceRoom) {
-      if (!map[voiceRoom]) map[voiceRoom] = []
-      if (!map[voiceRoom].find(u => u.username === username))
-        map[voiceRoom].push({ username })
+      const lkIncludesSelf = liveKitParticipants.includes(username)
+      if (lkIncludesSelf) {
+        map[voiceRoom] = liveKitParticipants.map(u => ({ username: u }))
+      } else {
+        if (!map[voiceRoom]) map[voiceRoom] = []
+        if (!map[voiceRoom].find(u => u.username === username))
+          map[voiceRoom].push({ username })
+      }
     }
     return map
-  }, [remoteParticipants, isInVoice, voiceRoom, username])
+  }, [remoteParticipants, isInVoice, voiceRoom, username, liveKitParticipants])
 
   const handleJoinVoice = async (targetRoom: string) => {
     if (joiningRef.current) return
@@ -137,6 +159,7 @@ export default function RoomPage() {
       if (isInVoice) {
         await disconnectFromRoom()
         resetOnLeave()
+        setLiveKitParticipants([])
       }
 
       const { token } = await fetch(
@@ -155,6 +178,7 @@ export default function RoomPage() {
     playLeaveSound()
     await disconnectFromRoom()
     resetOnLeave()
+    setLiveKitParticipants([])
   }
 
   const [isMobile, setIsMobile] = useState(false)
@@ -250,7 +274,7 @@ export default function RoomPage() {
         >
           <RoomAudioRenderer />
           <SpeakerListener onSpeakersChange={setSpeaking} />
-          <VoiceParticipantListener />
+          <VoiceParticipantListener onParticipantsChange={setLiveKitParticipants} />
           <MuteStateListener onMuteChange={handleRemoteMuteChange} />
           <RemoteMuteApplier locallyMuted={new Set()} />
           <VoiceControlBar
